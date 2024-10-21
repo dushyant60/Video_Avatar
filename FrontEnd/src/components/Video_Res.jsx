@@ -11,7 +11,6 @@ const AppContainer = styled.div`
   height: 100vh;
   width: 100vw;
   background-color: #f0f0f0;
-  // overflow: hidden;
   position: relative;
   padding: 20px;
 `;
@@ -22,14 +21,14 @@ const VideoContainer = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;
- height: calc(100vh - 100px);
+  height: calc(100vh - 100px);
 `;
 
 const StyledVideo = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 28px 28px 0px 0px;
+  border-radius: 28px 28px 0 0;
 `;
 
 const UploadOverlay = styled.div`
@@ -78,9 +77,9 @@ const ChatContainer = styled.div`
   width: 100%;
   display: flex;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 1);
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  z-index: 12;
   flex-direction: row-reverse;
   gap: 10px;
 `;
@@ -119,7 +118,7 @@ const SendButton = styled.button`
 const AvatarContainer = styled.div`
   z-index: 10;
   position: absolute;
-  bottom: 20px;
+  bottom: 80px;
   right: 20px;
 `;
 
@@ -182,6 +181,13 @@ const App = () => {
     }
   };
 
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <AppContainer>
       <VideoContainer>
@@ -208,6 +214,7 @@ const App = () => {
           value={userPrompt}
           onChange={(e) => setUserPrompt(e.target.value)}
           placeholder="Enter your question here..."
+          onKeyPress={handleKeyPress}
         />
         <SendButton onClick={handleSend}>Send</SendButton>
       </ChatContainer>

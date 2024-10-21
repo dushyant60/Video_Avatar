@@ -102,7 +102,7 @@ export const callAzureOpenAI = async (userSpeechText) => {
   const fallbackText = "नमस्ते, मैं एआई असिस्टेंट हूं आपकी मदद कैसे करें";
   try {
     const conversationId = generateUUID();
-    const response = await fetch(`${azureOpenAIEndpoint}/api/conversation`, {
+    const response = await fetch(`${azureOpenAIEndpoint}/api/conversatio`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
