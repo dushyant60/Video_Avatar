@@ -1,20 +1,21 @@
-// Import necessary dependencies
 import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
-import { Avatar } from './Avatar';
-import { callAzureOpenAI } from './Utility';
+import { Avatar } from './Avatar'; // Import Avatar component
+import { callAzureOpenAI } from './Utility'; // Import utility function
 
+// Styled component for the main container
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100vh;
   width: 100vw;
-  background-color: #f0f0f0;
+  background-color: #bfbfbf;
   position: relative;
   padding: 20px;
 `;
 
+// Styled component for the container holding the video
 const VideoContainer = styled.div`
   position: relative;
   display: flex;
@@ -24,13 +25,16 @@ const VideoContainer = styled.div`
   height: calc(100vh - 100px);
 `;
 
+// Styled component for the video element
 const StyledVideo = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 28px 28px 0 0;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 `;
 
+// Styled component for the upload overlay
 const UploadOverlay = styled.div`
   position: absolute;
   display: ${(props) => (props.show ? 'flex' : 'none')};
@@ -42,6 +46,7 @@ const UploadOverlay = styled.div`
   color: #fff;
 `;
 
+// Styled component for the upload button
 const UploadButton = styled.label`
   display: flex;
   align-items: center;
@@ -73,6 +78,7 @@ const UploadButton = styled.label`
   }
 `;
 
+// Styled component for the chat container
 const ChatContainer = styled.div`
   width: 100%;
   display: flex;
@@ -84,6 +90,7 @@ const ChatContainer = styled.div`
   gap: 10px;
 `;
 
+// Styled component for the chat input
 const ChatInput = styled.textarea`
   flex: 1;
   border: 1px solid #ccc;
@@ -96,6 +103,7 @@ const ChatInput = styled.textarea`
   margin-right: 10px;
 `;
 
+// Styled component for the send button
 const SendButton = styled.button`
   padding: 12px;
   border: none;
@@ -115,17 +123,85 @@ const SendButton = styled.button`
   }
 `;
 
+// Styled component for the avatar container
 const AvatarContainer = styled.div`
   z-index: 10;
   position: absolute;
-  bottom: 80px;
+  bottom: 0px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 40%;
+  height: 99%;
+  justify-content: flex-end;
 `;
+
+// Styled component for the message container
+const MessageList = styled.div`
+  width: 80%;
+  padding: 20px;
+  box-sizing: border-box;
+  // height: 25vh;
+  overflow-y: scroll;
+
+  /* Hide scrollbar for Webkit browsers */
+  &::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* Optional: just to avoid memory usage :) */
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+`;
+
+const Message = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+
+  ${(props) => (props.isQuestion ? 'justify-content: flex-start;' : 'justify-content: flex-end;')}
+
+  span {
+    background: ${(props) => (props.isQuestion ? '#ffffff' : '#007bff')};
+    color: ${(props) => (props.isQuestion ? '#000' : '#ffffff')};
+    border-radius: 8px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    max-width: 60%;
+    word-wrap: break-word;
+  }
+`;
+
+// Styled component for the screenshot thumbnails
+const ScreenshotContainer = styled.div`
+  display: ${(props) => (props.show ? 'flex' : 'none')};
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f1f1f1;
+  border-radius: 8px;
+  margin-top: 20px;
+  position: absolute;
+  bottom: 110px;  
+`;
+
+// Styled component for individual screenshot thumbnails
+const ScreenshotThumbnail = styled.div`
+  width: 150px;
+  height: 100px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+`;  
 
 const App = () => {
   const [videoSrc, setVideoSrc] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
   const [status, setStatus] = useState('');
+  const [screenshots, setScreenshots] = useState([]); 
+  const [messages, setMessages] = useState([]); // Store messages as an array of objects
   const videoRef = useRef();
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -140,13 +216,23 @@ const App = () => {
   };
 
   const captureFrame = () => {
-    if(videoRef.current) {
+    if (videoRef.current) {
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       return canvas.toDataURL('image/jpeg').split(',')[1]; // Base64 encoded frame
     }
   };
+
+  const parseResponse = (response) => {
+    let formattedResponse = response
+      .replace(/[#*]/g, '') // Remove # and *
+      .replace(/\[doc.*?\]/g, '') // Remove [doc1], [doc2], ... 
+      .replace(/-\s/g, ' ') // Replace dash-space with HTML list item
+      .replace(/\n/g, ' ') // Replace newline with HTML break
+
+    return formattedResponse;
+  }
 
   const handleSend = async () => {
     if (!videoRef.current || videoRef.current.ended) {
@@ -160,8 +246,11 @@ const App = () => {
     }
 
     const capturedFrame = captureFrame();
+    const currentMessage = `Q: ${userPrompt}`;
 
     setStatus('Sending data...');
+    setMessages([...messages, { type: 'question', text: userPrompt }]);
+    setScreenshots([...screenshots, capturedFrame]);
 
     try {
       const response = await fetch('http://localhost:7000/analyze/', {
@@ -173,12 +262,16 @@ const App = () => {
       });
 
       const data = await response.json();
-      setStatus(data.message);
+      const cleanMessage = parseResponse(data.message);
+      setStatus(cleanMessage);
+      setMessages([...messages, { type: 'question', text: userPrompt }, { type: 'answer', text: cleanMessage }]);
 
     } catch (error) {
       setStatus('Error sending data.');
       console.error('Error:', error);
     }
+
+    setUserPrompt(''); // Clear the input field after sending
   };
 
   const handleKeyPress = (event) => {
@@ -191,7 +284,7 @@ const App = () => {
   return (
     <AppContainer>
       <VideoContainer>
-        <StyledVideo ref={videoRef} src={videoSrc} controls muted  />
+        <StyledVideo ref={videoRef} src={videoSrc} controls muted />
         <UploadOverlay show={!videoSrc}>
           <UploadButton>
             <svg
@@ -202,12 +295,22 @@ const App = () => {
               className="bi bi-upload"
               viewBox="0 0 16 16"
             >
-              <path d="M.5 9.9a.5.5 0 0 1 .5.1.5.5 0 0 1 .1.5v4.9A2 2 0 0 0 2 16h12a2 2 0 0 0 2-2-.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5A2.5 2.5 0 0 1 14 17H2a2.5 2.5 0 0 1-2.5-2.5V10a.5.5 0 0 1 .5-.5zM7.646.854a.5.5 0 0 1 .708 0L11.5 4a.5.5 0 0 1-.707.707L8 1.707V10.5a.5.5 0 0 1-1 0V1.707L4.207 4.707a.5.5 0 1 1-.707-.707L7.646.854z" />
+              <path d="M.5 9.9a.5.5 0 0 1 .5.1.5.5 0 0 1 .1.5v4.9A2 2 0 0 0 2 16h12a2 2 0 0 0 2-2-.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5A2.5 2.5 0 0 1-14 17H2a2.5 2.5 0 0 1-2.5-2.5V10a.5.5 0 0 1 .5-.5zM7.646.854a.5.5 0 0 1 .708 0L11.5 4a.5.5 0 0 1-.707.707L8 1.707V10.5a.5.5 0 0 1-1 0V1.707L4.207 4.707a.5.5 0 1 1-.707-.707L7.646.854z" />
             </svg>
             Upload Video
-            <input type="file" accept="video/*" onChange={handleVideoUpload}  />
+            <input type="file" accept="video/*" onChange={handleVideoUpload} />
           </UploadButton>
         </UploadOverlay>
+        <AvatarContainer>
+      <MessageList>
+        {messages.map((msg, index) => (
+          <Message key={index} isQuestion={msg.type === 'question'}>
+            <span dangerouslySetInnerHTML={{ __html: msg.type === 'question' ? `Q: ${msg.text}` : `A: ${msg.text}` }} />
+          </Message>
+        ))}
+      </MessageList>
+        <Avatar externalMessage={status} /> {/* Avatar component to speak the response */}
+      </AvatarContainer>
       </VideoContainer>
       <ChatContainer>
         <ChatInput
@@ -218,9 +321,17 @@ const App = () => {
         />
         <SendButton onClick={handleSend}>Send</SendButton>
       </ChatContainer>
-      <AvatarContainer>
-        <Avatar externalMessage={status} />
-      </AvatarContainer>
+
+      <ScreenshotContainer show={screenshots.length > 0}>
+  {screenshots.map((screenshot, index) => (
+    <ScreenshotThumbnail
+      key={index}
+      style={{ backgroundImage: `url(data:image/jpeg;base64,${screenshot})` }}
+    />
+  ))}
+</ScreenshotContainer>
+
+      
     </AppContainer>
   );
 };
