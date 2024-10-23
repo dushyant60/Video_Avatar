@@ -2,6 +2,10 @@ import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
 import { Avatar } from './Avatar'; // Import Avatar component
 import { callAzureOpenAI } from './Utility'; // Import utility function
+import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
+import { avatarAppConfig } from './config'; // Import configuration
+import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
+
 
 // Styled component for the main container
 const AppContainer = styled.div`
@@ -184,7 +188,7 @@ const ScreenshotContainer = styled.div`
   border-radius: 8px;
   margin-top: 20px;
   position: absolute;
-  bottom: 110px;  
+  bottom: 120px;  
 `;
 
 // Styled component for individual screenshot thumbnails
@@ -205,6 +209,10 @@ const App = () => {
   const videoRef = useRef();
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
+  const [isMicrophoneActive, setIsMicrophoneActive] = useState(false);
+  const [recognizedText, setRecognizedText] = useState('');
+  const speechRecognizerRef = useRef(null);
+
 
   const handleVideoUpload = (event) => {
     const file = event.target.files[0];
@@ -234,22 +242,22 @@ const App = () => {
     return formattedResponse;
   }
 
-  const handleSend = async () => {
+  const handleSend = async (prompt = userPrompt) => {
     if (!videoRef.current || videoRef.current.ended) {
       setStatus('No video playing. Please upload a video.');
       return;
     }
 
-    if (!userPrompt) {
+    if (!prompt) {
       setStatus('User prompt is empty. Please enter a question.');
       return;
     }
 
     const capturedFrame = captureFrame();
-    const currentMessage = `Q: ${userPrompt}`;
+    const currentMessage = `Q: ${prompt}`;
 
     setStatus('Sending data...');
-    setMessages([...messages, { type: 'question', text: userPrompt }]);
+    setMessages([...messages, { type: 'question', text: prompt }]);
     setScreenshots([...screenshots, capturedFrame]);
 
     try {
@@ -258,14 +266,13 @@ const App = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ frame: capturedFrame, prompt: userPrompt }),
+        body: JSON.stringify({ frame: capturedFrame, prompt }),
       });
 
       const data = await response.json();
       const cleanMessage = parseResponse(data.message);
       setStatus(cleanMessage);
-      setMessages([...messages, { type: 'question', text: userPrompt }, { type: 'answer', text: cleanMessage }]);
-
+      setMessages([...messages, { type: 'question', text: prompt }, { type: 'answer', text: cleanMessage }]);
     } catch (error) {
       setStatus('Error sending data.');
       console.error('Error:', error);
@@ -278,6 +285,40 @@ const App = () => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleMicrophoneClick = () => {
+    if (isMicrophoneActive) {
+      speechRecognizerRef.current.stopContinuousRecognitionAsync();
+      setIsMicrophoneActive(false);
+    } else {
+      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
+        avatarAppConfig.azureSpeechServiceKey, 
+        avatarAppConfig.azureSpeechServiceRegion
+      );
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+      speechRecognizerRef.current = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+      speechRecognizerRef.current.recognized = (s, e) => {
+        if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+          const recognizedText = e.result.text.trim();
+          if (recognizedText) {
+            setUserPrompt(recognizedText);
+            handleSend(recognizedText); // Auto-send the recognized text
+          }
+        }
+      };
+
+      speechRecognizerRef.current.canceled = (s, e) => {
+        if (e.reason === SpeechSDK.CancellationReason.Error) {
+          console.error(`Error: ${e.errorDetails}`);
+        }
+        setIsMicrophoneActive(false);
+      };
+
+      speechRecognizerRef.current.startContinuousRecognitionAsync();
+      setIsMicrophoneActive(true);
     }
   };
 
@@ -302,15 +343,15 @@ const App = () => {
           </UploadButton>
         </UploadOverlay>
         <AvatarContainer>
-      <MessageList>
-        {messages.map((msg, index) => (
-          <Message key={index} isQuestion={msg.type === 'question'}>
-            <span dangerouslySetInnerHTML={{ __html: msg.type === 'question' ? `Q: ${msg.text}` : `A: ${msg.text}` }} />
-          </Message>
-        ))}
-      </MessageList>
-        <Avatar externalMessage={status} /> {/* Avatar component to speak the response */}
-      </AvatarContainer>
+          <MessageList>
+            {messages.map((msg, index) => (
+              <Message key={index} isQuestion={msg.type === 'question'}>
+                <span dangerouslySetInnerHTML={{ __html: msg.type === 'question' ? `Q: ${msg.text}` : `A: ${msg.text}` }} />
+              </Message>
+            ))}
+          </MessageList>
+          <Avatar externalMessage={status} /> {/* Avatar component to speak the response */}
+        </AvatarContainer>
       </VideoContainer>
       <ChatContainer>
         <ChatInput
@@ -319,19 +360,20 @@ const App = () => {
           placeholder="Enter your question here..."
           onKeyPress={handleKeyPress}
         />
-        <SendButton onClick={handleSend}>Send</SendButton>
+        <SendButton onClick={() => handleSend(userPrompt)}>Send</SendButton>
+        <SendButton onClick={handleMicrophoneClick}>
+          {isMicrophoneActive ? <FaMicrophoneSlash /> : <FaMicrophone />}
+        </SendButton>
       </ChatContainer>
 
       <ScreenshotContainer show={screenshots.length > 0}>
-  {screenshots.map((screenshot, index) => (
-    <ScreenshotThumbnail
-      key={index}
-      style={{ backgroundImage: `url(data:image/jpeg;base64,${screenshot})` }}
-    />
-  ))}
-</ScreenshotContainer>
-
-      
+        {screenshots.map((screenshot, index) => (
+          <ScreenshotThumbnail
+            key={index}
+            style={{ backgroundImage: `url(data:image/jpeg;base64,${screenshot})` }}
+          />
+        ))}
+      </ScreenshotContainer>
     </AppContainer>
   );
 };

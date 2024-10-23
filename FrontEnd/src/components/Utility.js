@@ -57,81 +57,94 @@ export const createAvatarSynthesizer = () => {
 };
 
 /**
- * Make the background of a video transparent by processing its frames.
+ * Make the background of a video transparent by processing its frames using Web Worker if supported.
  * @param {HTMLVideoElement} videoElement - Video element to process.
  * @param {HTMLCanvasElement} canvasElement - Canvas element to draw processed frames.
- * @param {CanvasRenderingContext2D} context - Canvas context.
  */
-export const makeBackgroundTransparent = (videoElement, canvasElement, context) => {
-  const frameProcessor = () => {
-    context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-    const frame = context.getImageData(0, 0, canvasElement.width, canvasElement.height);
+export const makeBackgroundTransparent = (videoElement, canvasElement) => {
+  // Check if OffscreenCanvas is supported
+  if (typeof canvasElement.transferControlToOffscreen === 'function' && !canvasElement.getContext) {
+    const offscreen = canvasElement.transferControlToOffscreen();
+    const worker = new Worker(new URL('./worker.js', import.meta.url));
 
-    for (let i = 0; i < frame.data.length / 4; i++) {
-      const r = frame.data[i * 4];
-      const g = frame.data[i * 4 + 1];
-      const b = frame.data[i * 4 + 2];
+    worker.postMessage({
+      type: 'init',
+      canvas: offscreen,
+      width: canvasElement.width,
+      height: canvasElement.height,
+    }, [offscreen]);
 
-      // Assuming green screen background
-      if (g > 150 && r < 100 && b < 100) {
-        frame.data[i * 4 + 3] = 0; // Set alpha to 0 to make it transparent
+    const frameProcessor = () => {
+      worker.postMessage({
+        type: 'drawFrame',
+        videoElement: videoElement
+      });
+      requestAnimationFrame(frameProcessor);
+    };
+
+    frameProcessor();
+  } else {
+    // Fallback if OffscreenCanvas is not supported
+    const context = canvasElement.getContext('2d');
+
+    const greenThreshold = (r, g, b, threshold) => {
+      return g > threshold && r < 180 && b < 180;
+    };
+
+    const smoothEdges = (data, width, height) => {
+      const newData = new Uint8ClampedArray(data);
+
+      const getIndex = (x, y) => (y * width + x) * 4;
+
+      for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+          const idx = getIndex(x, y);
+
+          if (data[idx + 3] === 0) {
+            // Making surrounding pixels semi-transparent to smoothen edges
+            newData[getIndex(x - 1, y) + 3] = Math.min(newData[getIndex(x - 1, y) + 3], 128);
+            newData[getIndex(x + 1, y) + 3] = Math.min(newData[getIndex(x + 1, y) + 3], 128);
+            newData[getIndex(x, y - 1) + 3] = Math.min(newData[getIndex(x, y - 1) + 3], 128);
+            newData[getIndex(x, y + 1) + 3] = Math.min(newData[getIndex(x, y + 1) + 3], 128);
+          }
+        }
       }
-    }
 
-    context.putImageData(frame, 0, 0);
-    requestAnimationFrame(frameProcessor);
-  };
+      return newData;
+    };
 
-  frameProcessor();
-};
+    const processFrame = () => {
+      context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+      const frame = context.getImageData(0, 0, canvasElement.width, canvasElement.height);
+      const data = frame.data;
 
-// Generate a random UUID for session or conversation IDs
-const generateUUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
 
-/**
- * Call Azure OpenAI API with user speech text.
- * @param {string} userSpeechText - Speech text from the user.
- * @returns {Promise<string>} - Response text from Azure OpenAI.
- */
-export const callAzureOpenAI = async (userSpeechText) => {
-  const fallbackText = "नमस्ते, मैं एआई असिस्टेंट हूं आपकी मदद कैसे करें";
-  try {
-    const conversationId = generateUUID();
-    const response = await fetch(`${azureOpenAIEndpoint}/api/conversatio`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        conversation_id: conversationId,
-        messages: [{ role: 'user', content: userSpeechText }]
-      })
-    });
+        if (greenThreshold(r, g, b, 150)) {
+          data[i + 3] = 0; // Set alpha to 0 to make it transparent
+        }
+      }
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      const smoothedData = smoothEdges(data, canvasElement.width, canvasElement.height);
+      frame.data.set(smoothedData);
+      context.putImageData(frame, 0, 0);
 
-    const data = await response.json();
-    const content = data.choices[0].messages.find(message => message.role === 'assistant')?.content || fallbackText;
-    return content;
-  } catch (error) {
-    console.error("API call failed:", error);
-    return fallbackText;
+      requestAnimationFrame(processFrame);
+    };
+
+    processFrame();
   }
 };
-
-let isRecognitionStarted = false;
 
 /**
  * Start speech recognition using Microsoft Speech SDK.
  * @param {function} onResult - Callback function for recognized text.
  */
+let isRecognitionStarted = false;
+
 export const startSpeechRecognition = (onResult) => {
   if (isRecognitionStarted) return;
 

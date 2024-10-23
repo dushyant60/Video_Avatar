@@ -75,4 +75,35 @@
 
 .btn:hover {
   opacity: 0.8;
+  background-color: none !important;
+}
+
+.options {
+  display: flex;
+  gap: 10px; /* Space between the buttons */
+  justify-content: center; /* Center align the buttons */
+  margin-top: 20px; /* Add space from top */
+}
+
+
+.demo-btn {
+  background-color: #007bff !important; /* Blue color */
+  /* color: white; */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
+}
+
+.demo-btn:hover {
+  background-color: #0056b3 !important; /* Darker blue on hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Enhance shadow on hover */
+}
+
+.continue-btn {
+  background-color: #28a745 !important; /* Green color */
+  /* color: white; */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
+}
+
+.continue-btn:hover {
+  background-color: #218838 !important; /* Darker green on hover */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Enhance shadow on hover */
 }
