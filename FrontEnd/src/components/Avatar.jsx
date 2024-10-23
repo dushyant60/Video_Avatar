@@ -3,49 +3,45 @@ import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 import { createAvatarSynthesizer, createWebRTCConnection, makeBackgroundTransparent } from "./Utility";
 import { avatarAppConfig } from "./config";
 import { useState, useRef, useEffect } from "react";
-import { FaPlug, FaTimes, FaMicrophone, FaMicrophoneSlash, FaStop } from 'react-icons/fa';
+import { FaPlug, FaTimes, FaStop } from 'react-icons/fa';
 
-export const Avatar = ({ externalMessage }) => {
-  // State and reference initializations
+export const Avatar = ({ externalMessage, onDemoComplete }) => {
+  // State hooks
   const [avatarSynthesizer, setAvatarSynthesizer] = useState(null);
   const [recognizedText, setRecognizedText] = useState("");
   const [responseText, setResponseText] = useState("");
   const [isConnected, setIsConnected] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const [isDemoRunning, setIsDemoRunning] = useState(false);
+
+  // Refs for video and audio elements
   const myAvatarVideoEleRef = useRef();
   const myAvatarAudioEleRef = useRef();
-  const [microphoneButtonText, setMicrophoneButtonText] = useState("Start Microphone");
-  const [isMicrophoneActive, setIsMicrophoneActive] = useState(false);
-  const speechRecognizerRef = useRef(null);
-  const [showOptions, setShowOptions] = useState(false); // New state to show options
-
-  // Configuration for the avatar app
-  const {
-    iceUrl,
-    iceUsername,
-    iceCredential,
-    azureSpeechServiceKey,
-    azureSpeechServiceRegion
-  } = avatarAppConfig;
-
   const videoCanvasRef = useRef(null);
-  const introductionMessage = "Hello! I am your AI car assistant. Would you like a demo of the car or do you have any questions about it?";
-  const demoMessage = "Welcome to the demo of the Nissan Magnite. This car offers an impressive combination of design, technology, and performance..."; // Demo script
 
-  // Handle speech recognition results from an external source
+  // Configuration settings from config file
+  const { iceUrl, iceUsername, iceCredential, azureSpeechServiceKey, azureSpeechServiceRegion } = avatarAppConfig;
+
+  // Predefined messages
+  const introductionMessage = "Hello! I am your AI car assistant. Would you like a demo of the car or do you have any questions about it?";
+  const demoMessage = "Welcome to the demo of the Nissan Magnite. This car offers an impressive combination of design, technology, and performance...";
+  const continuationMessage = "Upload any video to ask about it, or just ask anything regarding Nissan cars.";
+
+  // Effect hook for handling external messages
   useEffect(() => {
     if (externalMessage) {
       handleSpeechRecognitionResult(externalMessage);
     }
   }, [externalMessage]);
 
-  // Introduce the avatar when connected
+  // Effect hook for introducing avatar when connected
   useEffect(() => {
     if (isConnected) {
       introduceAvatar();
     }
   }, [isConnected]);
 
-  // Function to handle video and audio track events
+  // Handle video and audio track events
   const handleOnTrack = (event) => {
     console.log(`Received track of kind: ${event.track.kind}`);
     if (event.track.kind === 'video') {
@@ -219,68 +215,10 @@ export const Avatar = ({ externalMessage }) => {
     }
   };
 
-  // Function to handle microphone button click
-  const handleMicrophoneClick = () => {
-    if (isMicrophoneActive) {
-      setMicrophoneButtonText("Stopping...");
-      speechRecognizerRef.current.stopContinuousRecognitionAsync(
-        () => {
-          setMicrophoneButtonText("Start Microphone");
-          setIsMicrophoneActive(false);
-        },
-        (err) => {
-          console.log("Failed to stop continuous recognition:", err);
-          setMicrophoneButtonText("Start Microphone");
-          setIsMicrophoneActive(false);
-        }
-      );
-      return;
-    }
-
-    setMicrophoneButtonText("Starting...");
-    speechRecognizerRef.current = new SpeechSDK.SpeechRecognizer(
-      SpeechSDK.SpeechConfig.fromSubscription(azureSpeechServiceKey, azureSpeechServiceRegion),
-      SpeechSDK.AudioConfig.fromDefaultMicrophoneInput()
-    );
-
-    speechRecognizerRef.current.recognized = async (s, e) => {
-      if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-        let userQuery = e.result.text.trim();
-        if (userQuery === '') return;
-
-        setMicrophoneButtonText("Stopping...");
-        speechRecognizerRef.current.stopContinuousRecognitionAsync(
-          () => {
-            setMicrophoneButtonText("Start Microphone");
-            setIsMicrophoneActive(false);
-          },
-          (err) => {
-            console.log("Failed to stop continuous recognition:", err);
-            setMicrophoneButtonText("Start Microphone");
-            setIsMicrophoneActive(false);
-          }
-        );
-
-        handleSpeechRecognitionResult(userQuery);
-      }
-    };
-
-    speechRecognizerRef.current.startContinuousRecognitionAsync(
-      () => {
-        setMicrophoneButtonText("Stop Microphone");
-        setIsMicrophoneActive(true);
-      },
-      (err) => {
-        console.log("Failed to start continuous recognition:", err);
-        setMicrophoneButtonText("Start Microphone");
-        setIsMicrophoneActive(false);
-      }
-    );
-  };
-
   // Handle demo button click
   const handleDemoClick = () => {
     setShowOptions(false); // Hide options
+    setIsDemoRunning(true); // Mark demo as running
     if (avatarSynthesizer) {
       avatarSynthesizer.speakTextAsync(demoMessage).then((result) => {
         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
@@ -302,14 +240,42 @@ export const Avatar = ({ externalMessage }) => {
     }
   };
 
+  // Handle end demo button click
+  const handleEndDemoClick = () => {
+    setIsDemoRunning(false); // Mark demo as ended
+    if (avatarSynthesizer) {
+      setTimeout(() => {
+        avatarSynthesizer.speakTextAsync(continuationMessage).then((result) => {
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+            console.log("Continuation message synthesized to video stream.");
+            onDemoComplete(); // Notify parent component that demo has completed
+          } else {
+            console.error("Unable to speak continuation. Result ID: " + result.resultId);
+            if (result.reason === SpeechSDK.ResultReason.Canceled) {
+              const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+              console.error(cancellationDetails.reason);
+              if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
+                console.error(cancellationDetails.errorDetails);
+              }
+            }
+          }
+        }).catch((error) => {
+          console.error("Error synthesizing continuation:", error);
+          avatarSynthesizer.close();
+        });
+      }, 1000); // Delay of 1000 milliseconds (1 second)
+    }
+  };
+
   // Handle continue button click
   const handleContinueClick = () => {
     setShowOptions(false); // Hide options
+    setIsDemoRunning(false); // Ensure demo is not marked as running
     if (avatarSynthesizer) {
-      const continuationMessage = "Upload any video to ask about it, or just ask anything regarding Nissan cars.";
       avatarSynthesizer.speakTextAsync(continuationMessage).then((result) => {
         if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
           console.log("Continuation message synthesized to video stream.");
+          onDemoComplete(); // Notify parent component that continuation has completed
         } else {
           console.error("Unable to speak continuation. Result ID: " + result.resultId);
           if (result.reason === SpeechSDK.ResultReason.Canceled) {
@@ -335,17 +301,14 @@ export const Avatar = ({ externalMessage }) => {
           <canvas ref={videoCanvasRef} className="video-canvas"></canvas>
           <audio ref={myAvatarAudioEleRef}></audio>
           <div className="avatar-controls">
-            <button className="btn connect-btn" onClick={startSession} style={{ color: "white" }}>
+            <button className="btn connect-btn" onClick={startSession} style={{ color: "black" }}>
               <FaPlug /> Connect
             </button>
-            <button className="btn disconnect-btn" onClick={stopSession} style={{ color: "white" }}>
+            <button className="btn disconnect-btn" onClick={stopSession} style={{ color: "black" }}>
               <FaTimes /> Disconnect
             </button>
-            {/* Uncomment for microphone buttons */}
-            {/* <button className="btn mic-btn" onClick={handleMicrophoneClick}  style={{ color: "white" }}>
-              {isMicrophoneActive ? <FaMicrophoneSlash /> : <FaMicrophone />} {microphoneButtonText}
-            </button>
-            <button className="btn stop-btn" onClick={stopSpeaking} style={{ color: "white" }}>
+            {/* Additional controls (commented out) */}
+            {/* <button className="btn stop-btn" onClick={stopSpeaking} style={{ color: "white" }}>
               <FaStop /> Stop Speaking
             </button> */}
           </div>
@@ -360,15 +323,13 @@ export const Avatar = ({ externalMessage }) => {
             </div>
           )}
         </div>
-        {/* Uncomment for chat section
-        <div className="chat-section">
-          <div className="chat-bubble user-query">
-            <p>Recognized: {recognizedText}</p>
+        {isDemoRunning && (
+          <div className="end-demo">
+            <button className="btn end-demo-btn" onClick={handleEndDemoClick} style={{ color: "white" }}>
+              End Demo
+            </button>
           </div>
-          <div className="chat-bubble bot-response">
-            <p>Response: {responseText}</p>
-          </div>
-        </div> */}
+        )}
       </div>
     </div>
   );

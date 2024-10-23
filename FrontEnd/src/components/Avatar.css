@@ -107,3 +107,16 @@
   background-color: #218838 !important; /* Darker green on hover */
   box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Enhance shadow on hover */
 }
+
+.end-demo{
+  display: flex;
+  justify-content: center; /* Center align the buttons */
+  margin-top: 20px;
+  margin-right: 35px;
+}
+
+.end-demo-btn{
+  background-color: #be0010 !important; /* Blue color */
+  /* color: white; */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
+}

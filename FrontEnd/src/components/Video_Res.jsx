@@ -1,25 +1,54 @@
 import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
-import { Avatar } from './Avatar'; // Import Avatar component
-import { callAzureOpenAI } from './Utility'; // Import utility function
-import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
-import { avatarAppConfig } from './config'; // Import configuration
+import { Avatar } from './Avatar';
+import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
+import { avatarAppConfig } from './config';
 import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
 
-
-// Styled component for the main container
+// Define styled components
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100vh;
   width: 100vw;
-  background-color: #bfbfbf;
+  background: linear-gradient(135deg, #e0f7fa, #b3e5fc, #81d4fa);
   position: relative;
   padding: 20px;
+  overflow: hidden;
+
+  /* Grainy effect overlay */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.02); /* Light grain effect */
+    background-image: repeating-radial-gradient(
+      circle at 0 0, rgba(0, 0, 0, 0.1) 0, rgba(0, 0, 0, 0) 2px
+    );
+    filter: contrast(200%) brightness(150%);
+    opacity: 0.3;
+    z-index: 1; /* Ensure grain effect is on top */
+  }
+
+  /* Content within the container */
+  > * {
+    z-index: 2; /* Ensure content is above the grain effect */
+  }
 `;
 
-// Styled component for the container holding the video
+const HiddenWrapper = styled.div`
+  display: ${props => (props.show ? 'flex' : 'none')};
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+`;
+
 const VideoContainer = styled.div`
   position: relative;
   display: flex;
@@ -29,19 +58,17 @@ const VideoContainer = styled.div`
   height: calc(100vh - 100px);
 `;
 
-// Styled component for the video element
 const StyledVideo = styled.video`
   width: 100%;
-  height: 100%;
+  height: 90vh;
   object-fit: cover;
   border-radius: 28px 28px 0 0;
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 `;
 
-// Styled component for the upload overlay
 const UploadOverlay = styled.div`
   position: absolute;
-  display: ${(props) => (props.show ? 'flex' : 'none')};
+  display: ${props => (props.show ? 'flex' : 'none')};
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -50,7 +77,6 @@ const UploadOverlay = styled.div`
   color: #fff;
 `;
 
-// Styled component for the upload button
 const UploadButton = styled.label`
   display: flex;
   align-items: center;
@@ -82,7 +108,6 @@ const UploadButton = styled.label`
   }
 `;
 
-// Styled component for the chat container
 const ChatContainer = styled.div`
   width: 100%;
   display: flex;
@@ -94,7 +119,6 @@ const ChatContainer = styled.div`
   gap: 10px;
 `;
 
-// Styled component for the chat input
 const ChatInput = styled.textarea`
   flex: 1;
   border: 1px solid #ccc;
@@ -107,7 +131,6 @@ const ChatInput = styled.textarea`
   margin-right: 10px;
 `;
 
-// Styled component for the send button
 const SendButton = styled.button`
   padding: 12px;
   border: none;
@@ -127,7 +150,6 @@ const SendButton = styled.button`
   }
 `;
 
-// Styled component for the avatar container
 const AvatarContainer = styled.div`
   z-index: 10;
   position: absolute;
@@ -141,23 +163,19 @@ const AvatarContainer = styled.div`
   justify-content: flex-end;
 `;
 
-// Styled component for the message container
 const MessageList = styled.div`
   width: 80%;
   padding: 20px;
   box-sizing: border-box;
-  // height: 25vh;
   overflow-y: scroll;
 
-  /* Hide scrollbar for Webkit browsers */
   &::-webkit-scrollbar {
     width: 0px;
-    background: transparent; /* Optional: just to avoid memory usage :) */
+    background: transparent;
   }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 `;
 
 const Message = styled.div`
@@ -165,11 +183,11 @@ const Message = styled.div`
   align-items: center;
   margin-bottom: 10px;
 
-  ${(props) => (props.isQuestion ? 'justify-content: flex-start;' : 'justify-content: flex-end;')}
+  ${props => props.isQuestion ? 'justify-content: flex-start;' : 'justify-content: flex-end;'}
 
   span {
-    background: ${(props) => (props.isQuestion ? '#ffffff' : '#007bff')};
-    color: ${(props) => (props.isQuestion ? '#000' : '#ffffff')};
+    background: ${props => props.isQuestion ? '#ffffff' : '#007bff'};
+    color: ${props => props.isQuestion ? '#000' : '#ffffff'};
     border-radius: 8px;
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
     padding: 10px;
@@ -178,9 +196,8 @@ const Message = styled.div`
   }
 `;
 
-// Styled component for the screenshot thumbnails
 const ScreenshotContainer = styled.div`
-  display: ${(props) => (props.show ? 'flex' : 'none')};
+  display: ${props => props.show ? 'flex' : 'none'};
   flex-wrap: wrap;
   gap: 10px;
   padding: 10px;
@@ -191,30 +208,30 @@ const ScreenshotContainer = styled.div`
   bottom: 120px;  
 `;
 
-// Styled component for individual screenshot thumbnails
 const ScreenshotThumbnail = styled.div`
   width: 150px;
   height: 100px;
   background-size: cover;
   background-position: center;
   border-radius: 8px;
-`;  
+`;
 
 const App = () => {
   const [videoSrc, setVideoSrc] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
   const [status, setStatus] = useState('');
-  const [screenshots, setScreenshots] = useState([]); 
-  const [messages, setMessages] = useState([]); // Store messages as an array of objects
+  const [screenshots, setScreenshots] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [recognizedText, setRecognizedText] = useState('');
+  const [isMicrophoneActive, setIsMicrophoneActive] = useState(false);
+  const [showHiddenContent, setShowHiddenContent] = useState(false);
+
   const videoRef = useRef();
+  const speechRecognizerRef = useRef(null);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  const [isMicrophoneActive, setIsMicrophoneActive] = useState(false);
-  const [recognizedText, setRecognizedText] = useState('');
-  const speechRecognizerRef = useRef(null);
 
-
-  const handleVideoUpload = (event) => {
+  const handleVideoUpload = event => {
     const file = event.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
@@ -225,22 +242,21 @@ const App = () => {
 
   const captureFrame = () => {
     if (videoRef.current) {
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      return canvas.toDataURL('image/jpeg').split(',')[1]; // Base64 encoded frame
+      const { videoWidth, videoHeight } = videoRef.current;
+      canvas.width = videoWidth;
+      canvas.height = videoHeight;
+      ctx.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+      return canvas.toDataURL('image/jpeg').split(',')[1];
     }
   };
 
-  const parseResponse = (response) => {
-    let formattedResponse = response
-      .replace(/[#*]/g, '') // Remove # and *
-      .replace(/\[doc.*?\]/g, '') // Remove [doc1], [doc2], ... 
-      .replace(/-\s/g, ' ') // Replace dash-space with HTML list item
-      .replace(/\n/g, ' ') // Replace newline with HTML break
-
-    return formattedResponse;
-  }
+  const parseResponse = response => {
+    return response
+      .replace(/[#*]/g, '')
+      .replace(/\[doc.*?\]/g, '')
+      .replace(/-\s/g, ' ')
+      .replace(/\n/g, ' ');
+  };
 
   const handleSend = async (prompt = userPrompt) => {
     if (!videoRef.current || videoRef.current.ended) {
@@ -254,8 +270,6 @@ const App = () => {
     }
 
     const capturedFrame = captureFrame();
-    const currentMessage = `Q: ${prompt}`;
-
     setStatus('Sending data...');
     setMessages([...messages, { type: 'question', text: prompt }]);
     setScreenshots([...screenshots, capturedFrame]);
@@ -278,10 +292,10 @@ const App = () => {
       console.error('Error:', error);
     }
 
-    setUserPrompt(''); // Clear the input field after sending
+    setUserPrompt('');
   };
 
-  const handleKeyPress = (event) => {
+  const handleKeyPress = event => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       handleSend();
@@ -294,7 +308,7 @@ const App = () => {
       setIsMicrophoneActive(false);
     } else {
       const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
-        avatarAppConfig.azureSpeechServiceKey, 
+        avatarAppConfig.azureSpeechServiceKey,
         avatarAppConfig.azureSpeechServiceRegion
       );
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
@@ -305,7 +319,7 @@ const App = () => {
           const recognizedText = e.result.text.trim();
           if (recognizedText) {
             setUserPrompt(recognizedText);
-            handleSend(recognizedText); // Auto-send the recognized text
+            handleSend(recognizedText);
           }
         }
       };
@@ -322,26 +336,32 @@ const App = () => {
     }
   };
 
+  const handleDemoComplete = () => {
+    setShowHiddenContent(true);
+  };
+
   return (
     <AppContainer>
       <VideoContainer>
-        <StyledVideo ref={videoRef} src={videoSrc} controls muted />
-        <UploadOverlay show={!videoSrc}>
-          <UploadButton>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              className="bi bi-upload"
-              viewBox="0 0 16 16"
-            >
-              <path d="M.5 9.9a.5.5 0 0 1 .5.1.5.5 0 0 1 .1.5v4.9A2 2 0 0 0 2 16h12a2 2 0 0 0 2-2-.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5A2.5 2.5 0 0 1-14 17H2a2.5 2.5 0 0 1-2.5-2.5V10a.5.5 0 0 1 .5-.5zM7.646.854a.5.5 0 0 1 .708 0L11.5 4a.5.5 0 0 1-.707.707L8 1.707V10.5a.5.5 0 0 1-1 0V1.707L4.207 4.707a.5.5 0 1 1-.707-.707L7.646.854z" />
-            </svg>
-            Upload Video
-            <input type="file" accept="video/*" onChange={handleVideoUpload} />
-          </UploadButton>
-        </UploadOverlay>
+        <HiddenWrapper show={showHiddenContent}>
+          <StyledVideo ref={videoRef} src={videoSrc} controls muted />
+          <UploadOverlay show={!videoSrc}>
+            <UploadButton>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                className="bi bi-upload"
+                viewBox="0 0 16 16"
+              >
+                <path d="M.5 9.9a.5.5 0 0 1 .5.1.5.5 0 0 1 .1.5v4.9A2 2 0 0 0 2 16h12a2 2 0 0 0 2-2-.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5A2.5 2.5 0 0 1-14 17H2a2.5 2.5 0 0 1-2.5-2.5V10a.5.5 0 0 1 .5-.5zM7.646.854a.5.5 0 0 1 .708 0L11.5 4a.5.5 0 0 1-.707.707L8 1.707V10.5a.5.5 0 0 1-1 0V1.707L4.207 4.707a.5.5 0 1 1-.707-.707L7.646.854z" />
+              </svg>
+              Upload Video
+              <input type="file" accept="video/*" onChange={handleVideoUpload} />
+            </UploadButton>
+          </UploadOverlay>
+        </HiddenWrapper>
         <AvatarContainer>
           <MessageList>
             {messages.map((msg, index) => (
@@ -350,30 +370,31 @@ const App = () => {
               </Message>
             ))}
           </MessageList>
-          <Avatar externalMessage={status} /> {/* Avatar component to speak the response */}
+          <Avatar externalMessage={status} onDemoComplete={handleDemoComplete} />
         </AvatarContainer>
       </VideoContainer>
-      <ChatContainer>
-        <ChatInput
-          value={userPrompt}
-          onChange={(e) => setUserPrompt(e.target.value)}
-          placeholder="Enter your question here..."
-          onKeyPress={handleKeyPress}
-        />
-        <SendButton onClick={() => handleSend(userPrompt)}>Send</SendButton>
-        <SendButton onClick={handleMicrophoneClick}>
-          {isMicrophoneActive ? <FaMicrophoneSlash /> : <FaMicrophone />}
-        </SendButton>
-      </ChatContainer>
-
-      <ScreenshotContainer show={screenshots.length > 0}>
-        {screenshots.map((screenshot, index) => (
-          <ScreenshotThumbnail
-            key={index}
-            style={{ backgroundImage: `url(data:image/jpeg;base64,${screenshot})` }}
+      <HiddenWrapper show={showHiddenContent}>
+        <ChatContainer>
+          <ChatInput
+            value={userPrompt}
+            onChange={e => setUserPrompt(e.target.value)}
+            placeholder="Enter your question here..."
+            onKeyPress={handleKeyPress}
           />
-        ))}
-      </ScreenshotContainer>
+          <SendButton onClick={() => handleSend(userPrompt)}>Send</SendButton>
+          <SendButton onClick={handleMicrophoneClick}>
+            {isMicrophoneActive ? <FaMicrophoneSlash /> : <FaMicrophone />}
+          </SendButton>
+        </ChatContainer>
+        <ScreenshotContainer show={screenshots.length > 0}>
+          {screenshots.map((screenshot, index) => (
+            <ScreenshotThumbnail
+              key={index}
+              style={{ backgroundImage: `url(data:image/jpeg;base64,${screenshot})` }}
+            />
+          ))}
+        </ScreenshotContainer>
+      </HiddenWrapper>
     </AppContainer>
   );
 };
