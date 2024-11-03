@@ -1,0 +1,4 @@
+fastapi
+fastapi-cors
+httpx
+uvicorn

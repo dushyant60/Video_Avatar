@@ -1,46 +1,34 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
+import { v4 as uuidv4 } from 'uuid';
 import { Avatar } from './Avatar';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { avatarAppConfig } from './config';
 import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
-
-// Define styled components
+import VideoPicker from './VideoPicker'; // Import the new component
+ 
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100vh;
   width: 100vw;
-  background: linear-gradient(135deg, #e0f7fa, #b3e5fc, #81d4fa);
+  background: url('/bg.png') no-repeat center center;
+  background-size: cover;
   position: relative;
   padding: 20px;
   overflow: hidden;
-
-  /* Grainy effect overlay */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background: rgba(255, 255, 255, 0.02); /* Light grain effect */
-    background-image: repeating-radial-gradient(
-      circle at 0 0, rgba(0, 0, 0, 0.1) 0, rgba(0, 0, 0, 0) 2px
-    );
-    filter: contrast(200%) brightness(150%);
-    opacity: 0.3;
-    z-index: 1; /* Ensure grain effect is on top */
-  }
-
-  /* Content within the container */
-  > * {
-    z-index: 2; /* Ensure content is above the grain effect */
-  }
 `;
-
+ 
+const DemoVideoContainer = styled.div`
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: calc(100vh - 100px);
+`;
+ 
 const HiddenWrapper = styled.div`
   display: ${props => (props.show ? 'flex' : 'none')};
   flex-direction: column;
@@ -48,7 +36,7 @@ const HiddenWrapper = styled.div`
   width: 100%;
   height: 100%;
 `;
-
+ 
 const VideoContainer = styled.div`
   position: relative;
   display: flex;
@@ -57,28 +45,32 @@ const VideoContainer = styled.div`
   width: 100%;
   height: calc(100vh - 100px);
 `;
-
-const StyledVideo = styled.video`
+ 
+// Add crossOrigin attribute to the video element
+const StyledVideo = styled.video.attrs(() => ({
+  crossOrigin: 'anonymous'
+}))`
   width: 100%;
   height: 90vh;
   object-fit: cover;
   border-radius: 28px 28px 0 0;
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 `;
-
+ 
 const UploadOverlay = styled.div`
   position: absolute;
   display: ${props => (props.show ? 'flex' : 'none')};
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
   color: #fff;
+  gap:10px;
 `;
-
+ 
 const UploadButton = styled.label`
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 12px;
@@ -92,22 +84,22 @@ const UploadButton = styled.label`
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
+ 
   &:hover {
     background-color: #218838;
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
     transform: translateY(-3px);
   }
-
+ 
   input {
     display: none;
   }
-
+ 
   svg {
     margin-right: 8px;
   }
 `;
-
+ 
 const ChatContainer = styled.div`
   width: 100%;
   display: flex;
@@ -118,7 +110,7 @@ const ChatContainer = styled.div`
   flex-direction: row-reverse;
   gap: 10px;
 `;
-
+ 
 const ChatInput = styled.textarea`
   flex: 1;
   border: 1px solid #ccc;
@@ -130,7 +122,7 @@ const ChatInput = styled.textarea`
   height: 50px;
   margin-right: 10px;
 `;
-
+ 
 const SendButton = styled.button`
   padding: 12px;
   border: none;
@@ -142,14 +134,14 @@ const SendButton = styled.button`
   letter-spacing: 1px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
+ 
   &:hover {
     background-color: #0056b3;
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
     transform: translateY(-3px);
   }
 `;
-
+ 
 const AvatarContainer = styled.div`
   z-index: 10;
   position: absolute;
@@ -159,32 +151,32 @@ const AvatarContainer = styled.div`
   flex-direction: column;
   align-items: flex-end;
   width: 40%;
-  height: 99%;
+  height: 97%;
   justify-content: flex-end;
 `;
-
+ 
 const MessageList = styled.div`
   width: 80%;
   padding: 20px;
   box-sizing: border-box;
   overflow-y: scroll;
-
+ 
   &::-webkit-scrollbar {
     width: 0px;
     background: transparent;
   }
-
+ 
   -ms-overflow-style: none;
   scrollbar-width: none;
 `;
-
+ 
 const Message = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 10px;
-
+ 
   ${props => props.isQuestion ? 'justify-content: flex-start;' : 'justify-content: flex-end;'}
-
+ 
   span {
     background: ${props => props.isQuestion ? '#ffffff' : '#007bff'};
     color: ${props => props.isQuestion ? '#000' : '#ffffff'};
@@ -195,7 +187,7 @@ const Message = styled.div`
     word-wrap: break-word;
   }
 `;
-
+ 
 const ScreenshotContainer = styled.div`
   display: ${props => props.show ? 'flex' : 'none'};
   flex-wrap: wrap;
@@ -207,7 +199,7 @@ const ScreenshotContainer = styled.div`
   position: absolute;
   bottom: 120px;  
 `;
-
+ 
 const ScreenshotThumbnail = styled.div`
   width: 150px;
   height: 100px;
@@ -215,7 +207,7 @@ const ScreenshotThumbnail = styled.div`
   background-position: center;
   border-radius: 8px;
 `;
-
+ 
 const App = () => {
   const [videoSrc, setVideoSrc] = useState('');
   const [userPrompt, setUserPrompt] = useState('');
@@ -225,21 +217,34 @@ const App = () => {
   const [recognizedText, setRecognizedText] = useState('');
   const [isMicrophoneActive, setIsMicrophoneActive] = useState(false);
   const [showHiddenContent, setShowHiddenContent] = useState(false);
-
-  const videoRef = useRef();
+  const [isDemoRunning, setIsDemoRunning] = useState(false);
+  const [conversationId, setConversationId] = useState(uuidv4());
+  const videoRef = useRef(null);
+  const demoVideoRef = useRef(null);
   const speechRecognizerRef = useRef(null);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-
+ 
   const handleVideoUpload = event => {
     const file = event.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setVideoSrc(url);
       setStatus('Video loaded. You can now enter a prompt.');
+      setConversationId(uuidv4());
+      setMessages([]);
+      setScreenshots([]);
     }
   };
-
+ 
+  const handleVideoSelect = (url) => {
+    setVideoSrc(url);
+    setStatus('Video loaded. You can now enter a prompt.');
+    setConversationId(uuidv4());
+    setMessages([]);
+    setScreenshots([]);
+  };
+ 
   const captureFrame = () => {
     if (videoRef.current) {
       const { videoWidth, videoHeight } = videoRef.current;
@@ -249,7 +254,7 @@ const App = () => {
       return canvas.toDataURL('image/jpeg').split(',')[1];
     }
   };
-
+ 
   const parseResponse = response => {
     return response
       .replace(/[#*]/g, '')
@@ -257,51 +262,64 @@ const App = () => {
       .replace(/-\s/g, ' ')
       .replace(/\n/g, ' ');
   };
-
+ 
   const handleSend = async (prompt = userPrompt) => {
     if (!videoRef.current || videoRef.current.ended) {
       setStatus('No video playing. Please upload a video.');
       return;
     }
-
-    if (!prompt) {
+ 
+    if (!prompt.trim()) {
       setStatus('User prompt is empty. Please enter a question.');
       return;
     }
-
+ 
     const capturedFrame = captureFrame();
     setStatus('Sending data...');
-    setMessages([...messages, { type: 'question', text: prompt }]);
+    const newUserMessage = { role: 'user', content: [{'type':'text','text':prompt}]};
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages(updatedMessages);
+ 
+    const updatedChatHistory = [...messages, newUserMessage];
     setScreenshots([...screenshots, capturedFrame]);
-
+ 
     try {
       const response = await fetch('http://localhost:7000/analyze/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ frame: capturedFrame, prompt }),
+        body: JSON.stringify({
+          frame: capturedFrame,
+          prompt,
+          conversation_id: conversationId,
+          messages: updatedChatHistory
+        }),
       });
-
+ 
       const data = await response.json();
       const cleanMessage = parseResponse(data.message);
       setStatus(cleanMessage);
-      setMessages([...messages, { type: 'question', text: prompt }, { type: 'answer', text: cleanMessage }]);
+ 
+      const newAssistantMessage = { role: 'assistant', content: [{'type':'text','text':cleanMessage}] };
+      const finalMessages = [...updatedMessages, newAssistantMessage];
+      setMessages(finalMessages);
+ 
     } catch (error) {
       setStatus('Error sending data.');
       console.error('Error:', error);
     }
-
+ 
     setUserPrompt('');
   };
-
+ 
   const handleKeyPress = event => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       handleSend();
     }
   };
-
+ 
   const handleMicrophoneClick = () => {
     if (isMicrophoneActive) {
       speechRecognizerRef.current.stopContinuousRecognitionAsync();
@@ -313,7 +331,7 @@ const App = () => {
       );
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       speechRecognizerRef.current = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-
+ 
       speechRecognizerRef.current.recognized = (s, e) => {
         if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
           const recognizedText = e.result.text.trim();
@@ -323,26 +341,55 @@ const App = () => {
           }
         }
       };
-
+ 
       speechRecognizerRef.current.canceled = (s, e) => {
         if (e.reason === SpeechSDK.CancellationReason.Error) {
           console.error(`Error: ${e.errorDetails}`);
         }
         setIsMicrophoneActive(false);
       };
-
+ 
       speechRecognizerRef.current.startContinuousRecognitionAsync();
       setIsMicrophoneActive(true);
     }
   };
-
+ 
   const handleDemoComplete = () => {
     setShowHiddenContent(true);
   };
-
+ 
+  const handleDemoStart = () => {
+    setIsDemoRunning(true);
+    if (demoVideoRef.current) {
+      demoVideoRef.current.play();
+    }
+  };
+ 
+  const handleDemoEnd = () => {
+    if (demoVideoRef.current) {
+      demoVideoRef.current.pause();
+      demoVideoRef.current.currentTime = 0;
+    }
+    setIsDemoRunning(false);
+  };
+ 
+  useEffect(() => {
+    if (isDemoRunning && demoVideoRef.current) {
+      demoVideoRef.current.play();
+    }
+  }, [isDemoRunning]);
+ 
   return (
     <AppContainer>
       <VideoContainer>
+        {isDemoRunning && (
+          <DemoVideoContainer>
+            <video ref={demoVideoRef} autoPlay muted style={{ borderRadius: "20px", width: "100%", height: "calc(100vh - 100px)", objectFit: "cover" }}>
+              <source src="/demo_video.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </DemoVideoContainer>
+        )}
         <HiddenWrapper show={showHiddenContent}>
           <StyledVideo ref={videoRef} src={videoSrc} controls muted />
           <UploadOverlay show={!videoSrc}>
@@ -355,24 +402,27 @@ const App = () => {
                 className="bi bi-upload"
                 viewBox="0 0 16 16"
               >
-                <path d="M.5 9.9a.5.5 0 0 1 .5.1.5.5 0 0 1 .1.5v4.9A2 2 0 0 0 2 16h12a2 2 0 0 0 2-2-.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5A2.5 2.5 0 0 1-14 17H2a2.5 2.5 0 0 1-2.5-2.5V10a.5.5 0 0 1 .5-.5zM7.646.854a.5.5 0 0 1 .708 0L11.5 4a.5.5 0 0 1-.707.707L8 1.707V10.5a.5.5 0 0 1-1 0V1.707L4.207 4.707a.5.5 0 1 1-.707-.707L7.646.854z" />
+                <path d="M.5 9.9a.5.5 0 0 1 .5.1.5.5 0 0 1 .1.5v4.9A2 2 0 0 0 2 16h12a2 2 0 0 0 2-2-.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5A2.5 2.5 0 0 1-14 17H2a2.5 2.5 0 0 1-2.5-2.5V10a.5.5 0 0 1 .5-.5zm7.646-.854a.5.5 0 0 1 .708 0L11.5 4a.5.5 0 0 1-.707.707L8 1.707V10.5a.5.5 0 0 1-1 0V1.707L4.207 4.707a.5.5 0 1 1-.707-.707L7.646.854z" />
               </svg>
               Upload Video
               <input type="file" accept="video/*" onChange={handleVideoUpload} />
             </UploadButton>
+            <VideoPicker onSelect={handleVideoSelect} /> {/* Integrate the VideoPicker component */}
           </UploadOverlay>
         </HiddenWrapper>
-        <AvatarContainer>
-          <MessageList>
-            {messages.map((msg, index) => (
-              <Message key={index} isQuestion={msg.type === 'question'}>
-                <span dangerouslySetInnerHTML={{ __html: msg.type === 'question' ? `Q: ${msg.text}` : `A: ${msg.text}` }} />
-              </Message>
-            ))}
-          </MessageList>
-          <Avatar externalMessage={status} onDemoComplete={handleDemoComplete} />
-        </AvatarContainer>
       </VideoContainer>
+ 
+      <AvatarContainer>
+      <MessageList>
+  {messages.map((msg, index) => (
+    <Message key={index} isQuestion={msg.role === 'user'}>
+      <span dangerouslySetInnerHTML={{ __html: msg.role === 'user' ? `Q: ${msg.content[0].text}` : `A: ${msg.content[0].text}` }} />
+    </Message>
+  ))}
+</MessageList>
+        <Avatar externalMessage={status} onDemoComplete={handleDemoComplete} onDemoStart={handleDemoStart} onDemoEnd={handleDemoEnd} />
+      </AvatarContainer>
+ 
       <HiddenWrapper show={showHiddenContent}>
         <ChatContainer>
           <ChatInput
@@ -398,5 +448,7 @@ const App = () => {
     </AppContainer>
   );
 };
-
+ 
 export default App;
+
+ 
