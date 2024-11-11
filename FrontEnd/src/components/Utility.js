@@ -41,7 +41,7 @@ export const createAvatarSynthesizer = () => {
   speechSynthesisConfig.speechSynthesisVoiceName = voiceName;
 
   const videoFormat = new SpeechSDK.AvatarVideoFormat();
-  videoFormat.setCropRange(new SpeechSDK.Coordinate(0, 0), new SpeechSDK.Coordinate(1920, 1080)); // Full HD
+  videoFormat.setCropRange(new SpeechSDK.Coordinate(700, 0), new SpeechSDK.Coordinate(1220, 1080)); // Full HD
 
   const avatarConfig = new SpeechSDK.AvatarConfig(avatarCharacter, avatarStyle, videoFormat);
   avatarConfig.backgroundColor = avatarBackgroundColor;

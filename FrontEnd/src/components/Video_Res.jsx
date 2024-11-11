@@ -4,13 +4,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { Avatar } from './Avatar';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { avatarAppConfig } from './config';
-import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
+import { FaMicrophone, FaMicrophoneSlash, FaPaperPlane, FaStopCircle, FaVideoSlash } from 'react-icons/fa';
 import VideoPicker from './VideoPicker'; // Import the new component
- 
+import ScreenshotDrawer from './ScreenshotDrawer';
+import  { ReactTyped } from 'react-typed';
+import { Typewriter } from 'react-simple-typewriter';
 const AppContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  // display: flex;
+  // flex-direction: column;
+  // align-items: center;
   height: 100vh;
   width: 100vw;
   background: url('/bg.png') no-repeat center center;
@@ -18,6 +20,10 @@ const AppContainer = styled.div`
   position: relative;
   padding: 20px;
   overflow: hidden;
+
+   @media (max-width: 768px) {
+    padding: 5px; // Hide full message list below 768px
+  }
 `;
  
 const DemoVideoContainer = styled.div`
@@ -51,10 +57,11 @@ const StyledVideo = styled.video.attrs(() => ({
   crossOrigin: 'anonymous'
 }))`
   width: 100%;
-  height: 90vh;
+  height: 100%;
   object-fit: cover;
   border-radius: 28px 28px 0 0;
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+
 `;
  
 const UploadOverlay = styled.div`
@@ -145,30 +152,58 @@ const SendButton = styled.button`
 const AvatarContainer = styled.div`
   z-index: 10;
   position: absolute;
-  bottom: 0px;
+  bottom: 50px;
   right: 20px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  width: 40%;
-  height: 97%;
+  align-items: flex-end; 
+  max-width: 40%;
+  height: 87%;
   justify-content: flex-end;
 `;
  
 const MessageList = styled.div`
-  width: 80%;
-  padding: 20px;
+  width: 100%;
+  // height: 75%;
+  padding: 10px;
   box-sizing: border-box;
   overflow-y: scroll;
- 
   &::-webkit-scrollbar {
     width: 0px;
     background: transparent;
   }
- 
   -ms-overflow-style: none;
   scrollbar-width: none;
+
+  @media (max-width: 768px) {
+    display: none; // Hide full message list below 768px
+  }
 `;
+
+
+const Caption = styled.div`
+  display: none;
+  z-index: 9999;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: fixed;
+    bottom: 120px;
+    left: 0;
+    width: 70%;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 16px;
+
+
+
+
+   
+  }
+`;
+
  
 const Message = styled.div`
   display: flex;
@@ -207,6 +242,26 @@ const ScreenshotThumbnail = styled.div`
   background-position: center;
   border-radius: 8px;
 `;
+
+const StopButton = styled.button`
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #dc3545;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+
+  &:hover {
+    background-color: #c82333;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+  }
+`;
  
 const App = () => {
   const [videoSrc, setVideoSrc] = useState('');
@@ -224,6 +279,13 @@ const App = () => {
   const speechRecognizerRef = useRef(null);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const toggleDrawer = () => {
+    setIsDrawerOpen(!isDrawerOpen);
+  };
+
+
  
   const handleVideoUpload = event => {
     const file = event.target.files[0];
@@ -231,20 +293,29 @@ const App = () => {
       const url = URL.createObjectURL(file);
       setVideoSrc(url);
       setStatus('Video loaded. You can now enter a prompt.');
-      setConversationId(uuidv4());
-      setMessages([]);
-      setScreenshots([]);
+      // setConversationId(uuidv4());
+      // setMessages([]);
+      // setScreenshots([]);
     }
   };
  
   const handleVideoSelect = (url) => {
     setVideoSrc(url);
     setStatus('Video loaded. You can now enter a prompt.');
-    setConversationId(uuidv4());
-    setMessages([]);
-    setScreenshots([]);
+    // setConversationId(uuidv4());
+    // setMessages([]);
+    // setScreenshots([]);
   };
  
+  const handleStopVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+    setVideoSrc('');
+    setStatus('Video stopped. You can select another video.');
+  };
+
   const captureFrame = () => {
     if (videoRef.current) {
       const { videoWidth, videoHeight } = videoRef.current;
@@ -275,7 +346,7 @@ const App = () => {
     }
  
     const capturedFrame = captureFrame();
-    setStatus('Sending data...');
+    // setStatus('Sending data...');
     const newUserMessage = { role: 'user', content: [{'type':'text','text':prompt}]};
     const updatedMessages = [...messages, newUserMessage];
     setMessages(updatedMessages);
@@ -284,7 +355,7 @@ const App = () => {
     setScreenshots([...screenshots, capturedFrame]);
  
     try {
-      const response = await fetch('http://localhost:7000/analyze/', {
+      const response = await fetch('https://web-dpxjzr3ghqbg4-docker-dev-version.azurewebsites.net/api/conversation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -322,8 +393,17 @@ const App = () => {
  
   const handleMicrophoneClick = () => {
     if (isMicrophoneActive) {
-      speechRecognizerRef.current.stopContinuousRecognitionAsync();
-      setIsMicrophoneActive(false);
+      if (speechRecognizerRef.current) {
+        speechRecognizerRef.current.stopContinuousRecognitionAsync(
+          () => {
+            setIsMicrophoneActive(false);
+          },
+          (err) => {
+            console.error('Error stopping recognition:', err);
+            setIsMicrophoneActive(false);
+          }
+        );
+      }
     } else {
       const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
         avatarAppConfig.azureSpeechServiceKey,
@@ -331,7 +411,7 @@ const App = () => {
       );
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       speechRecognizerRef.current = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
- 
+  
       speechRecognizerRef.current.recognized = (s, e) => {
         if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
           const recognizedText = e.result.text.trim();
@@ -341,16 +421,23 @@ const App = () => {
           }
         }
       };
- 
+  
       speechRecognizerRef.current.canceled = (s, e) => {
         if (e.reason === SpeechSDK.CancellationReason.Error) {
           console.error(`Error: ${e.errorDetails}`);
         }
         setIsMicrophoneActive(false);
       };
- 
-      speechRecognizerRef.current.startContinuousRecognitionAsync();
-      setIsMicrophoneActive(true);
+  
+      speechRecognizerRef.current.startContinuousRecognitionAsync(
+        () => {
+          setIsMicrophoneActive(true);
+        },
+        (err) => {
+          console.error('Error starting recognition:', err);
+          setIsMicrophoneActive(false);
+        }
+      );
     }
   };
  
@@ -391,7 +478,7 @@ const App = () => {
           </DemoVideoContainer>
         )}
         <HiddenWrapper show={showHiddenContent}>
-          <StyledVideo ref={videoRef} src={videoSrc} controls muted />
+          <StyledVideo ref={videoRef} src={videoSrc} loop controls controlsList='nofullscreen' autoPlay muted />
           <UploadOverlay show={!videoSrc}>
             <UploadButton>
               <svg
@@ -414,12 +501,40 @@ const App = () => {
  
       <AvatarContainer>
       <MessageList>
-  {messages.map((msg, index) => (
-    <Message key={index} isQuestion={msg.role === 'user'}>
-      <span dangerouslySetInnerHTML={{ __html: msg.role === 'user' ? `Q: ${msg.content[0].text}` : `A: ${msg.content[0].text}` }} />
-    </Message>
-  ))}
-</MessageList>
+        {messages.map((msg, index) => (
+          <Message key={index} isQuestion={msg.role === 'user'}>
+            <span dangerouslySetInnerHTML={{ __html: msg.role === 'user' ? `Q: ${msg.content[0].text}` : `A: ${msg.content[0].text}` }} />
+          </Message>
+        ))}
+      </MessageList>
+
+      {/* Display latest assistant message as a caption below 768px */}
+      {/* {messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
+        <Caption>
+          {`${messages[messages.length - 1].content[0].text}`}
+        </Caption>
+      )} */}
+      {messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
+//   <Caption>
+//     <ReactTyped
+//   strings={[messages[messages.length - 1].content[0].text]}
+//   typeSpeed={0}         // Very fast typing effect
+//   backSpeed={0}         // No backspacing effect
+//   showCursor={false}    // Hide the cursor if you don't want it
+// />
+
+//   </Caption>
+<Caption>
+  <Typewriter
+    words={[messages[messages.length - 1].content[0].text]}
+    loop={1}            // No looping
+    typeSpeed={1}       // Ultra-fast typing speed
+    deleteSpeed={0}     // No backspacing speed (if needed)
+    cursor={false}      // Hide cursor
+  />
+</Caption>
+)}
+
         <Avatar externalMessage={status} onDemoComplete={handleDemoComplete} onDemoStart={handleDemoStart} onDemoEnd={handleDemoEnd} />
       </AvatarContainer>
  
@@ -431,19 +546,25 @@ const App = () => {
             placeholder="Enter your question here..."
             onKeyPress={handleKeyPress}
           />
-          <SendButton onClick={() => handleSend(userPrompt)}>Send</SendButton>
+          <SendButton onClick={() => handleSend(userPrompt)}> <FaPaperPlane /> </SendButton>
           <SendButton onClick={handleMicrophoneClick}>
             {isMicrophoneActive ? <FaMicrophoneSlash /> : <FaMicrophone />}
           </SendButton>
+          {videoSrc && <StopButton onClick={handleStopVideo}><FaVideoSlash/></StopButton>}
         </ChatContainer>
-        <ScreenshotContainer show={screenshots.length > 0}>
+        <ScreenshotDrawer
+          screenshots={screenshots}
+          open={isDrawerOpen}
+          toggleDrawer={toggleDrawer}
+        />
+        {/* <ScreenshotContainer show={screenshots.length > 0}>
           {screenshots.map((screenshot, index) => (
             <ScreenshotThumbnail
               key={index}
               style={{ backgroundImage: `url(data:image/jpeg;base64,${screenshot})` }}
             />
           ))}
-        </ScreenshotContainer>
+        </ScreenshotContainer> */}
       </HiddenWrapper>
     </AppContainer>
   );

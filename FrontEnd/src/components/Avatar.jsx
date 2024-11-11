@@ -3,7 +3,7 @@ import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 import { createAvatarSynthesizer, createWebRTCConnection, makeBackgroundTransparent } from "./Utility";
 import { avatarAppConfig } from "./config";
 import { useState, useRef, useEffect } from "react";
-import { FaPlug, FaTimes, FaStop } from 'react-icons/fa';
+import { FaPlug, FaTimes, FaStop, FaCommentDots } from 'react-icons/fa';
 
 export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd }) => {
   const [avatarSynthesizer, setAvatarSynthesizer] = useState(null);
@@ -12,6 +12,8 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
   const [isConnected, setIsConnected] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [isDemoRunning, setIsDemoRunning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
+  const [showTooltip, setShowTooltip] = useState(true); // New tooltip state
 
   const myAvatarVideoEleRef = useRef();
   const myAvatarAudioEleRef = useRef();
@@ -22,6 +24,14 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
   const introductionMessage = "Hello! I am your AI car assistant. Would you like a demo of the car or do you have any questions about it?";
   const demoMessage = "Welcome to the demo of the Nissan Magnite. This car offers an impressive combination of design, technology, and performance...";
   const continuationMessage = "Upload any video to ask about it, or just ask anything regarding Nissan cars.";
+
+
+  useEffect(() => {
+    // Hide tooltip after 10 seconds
+    const timer = setTimeout(() => setShowTooltip(false), 10000);
+    return () => clearTimeout(timer);
+  }, []);
+
 
   useEffect(() => {
     if (externalMessage) {
@@ -101,6 +111,7 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
   };
 
   const startSession = () => {
+    setIsLoading(true); // Set loading to true when session starts
     const peerConnection = createWebRTCConnection(iceUrl, iceUsername, iceCredential);
     peerConnection.ontrack = handleOnTrack;
     peerConnection.addTransceiver('video', { direction: 'sendrecv' });
@@ -113,8 +124,10 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
       console.log(`ICE connection state: ${peerConnection.iceConnectionState}`);
       if (peerConnection.iceConnectionState === 'connected' && avatarSynthesizerInstance) {
         setIsConnected(true);
+        setIsLoading(false); // Set loading to false when connected
       } else if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'disconnected') {
         setIsConnected(false);
+        setIsLoading(false); // Ensure loading is false on failure
       }
     };
   
@@ -122,8 +135,11 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
       console.log("Avatar started.");
     }).catch((error) => {
       console.error("Avatar failed to start. Error: " + error);
+      setIsLoading(false); // Ensure loading is false on error
     });
   };
+
+
   const introduceAvatar = () => {
     if (avatarSynthesizer) {
       avatarSynthesizer.speakTextAsync(introductionMessage).then((result) => {
@@ -260,14 +276,18 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
 
   return (
     <div className='avatar-container'>
-      <div className="avatar-controls">
-        <button className="btn connect-btn" onClick={startSession}>
-          <FaPlug /> Connect
-        </button>
-        <button className="btn disconnect-btn" onClick={stopSession}>
-          <FaTimes /> Disconnect
-        </button>
-      </div>
+      {showTooltip && <div className="tooltip">Let's explore Nissan cars with a new avatar experience!</div>}
+       {!isConnected && !isLoading && (
+        <div className="chat-bot-icon" onClick={startSession}>
+          <img src="avatarIcon.png" alt="Chat Bot" className="chat-bot-image" />
+        </div>
+      )}
+    
+{isLoading && (
+  <div className="loading-overlay">
+    <div className="loading-spinner"></div>
+  </div>
+)}
       {showOptions && (
         <div className="options">
           <button className="btn demo-btn" onClick={handleDemoClick}>

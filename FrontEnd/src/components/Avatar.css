@@ -13,7 +13,7 @@
   position: fixed;
   top: 60%;
   left: 50%;
-  transform: translate(-50%, -50%) scale(1.8); /* Center and enlarge */
+  transform: translate(-75%, -50%) scale(1.8); /* Center and enlarge */
 }
 
 .avatar-card.shrink {
@@ -24,15 +24,44 @@
 
 .avatar-video-wrapper {
   position: relative;
-  width: 450px;
-  height: 550px;
+  width: 30vh;
+  height: 58vh;
+  /* aspect-ratio: calc(3); */
+}
+@media (max-width: 768px) {
+  .avatar-video-wrapper {
+    width: 18vh; /* Adjust the width as needed */
+    height: 35vh; /* Adjust the height to make it a circle */
+  }
+
+  .avatar-card {
+    top: 70%;
+    transform: translate(-50%, -50%) scale(1.8);
+  }
+
+  .avatar-card.shrink {
+    transform: translate(7%, -25%) scale(1);
+    height: 70%;
+    width: 100%;
+    /* border-radius: 50%; */
+     /* Enhanced Gradient Background */
+     /* background: linear-gradient(135deg, #00c6ff, #009fff 25%, #0072ff 50%, #005fbf 75%, #0040ff); */
+
+    background-clip: padding-box; /* Ensures the gradient is clipped to the border area */
+    /* padding: 5px; Creates space for the gradient border */
+    /* box-shadow: 0 2px 2px rgba(0, 114, 255, 0.1), 0 2px 8px rgba(0, 198, 255, 0.8); */
+    transition: transform 0.3s ease; /* Smooth hover effect */
+}
+
+  
 }
 
 .video-canvas {
   position: absolute;
   top: 0;
-  right: -250px;
+  right: 0;
   height: 100%;
+  width: 100%;
   z-index: 10;
   pointer-events: none;
 }
@@ -49,8 +78,8 @@
 
 .avatar-controls {
   position: fixed;
-  top: 50px;
-  left: 50px;
+  top: 30px;
+  left: 40px;
   display: flex;
   gap: 10px;
 }
@@ -63,18 +92,38 @@
   padding: 5px 10px;
   border: none;
   border-radius: 5px;
+  color: white !important;
 }
 
 .connect-btn {
   background-color: #4CAF50;
   color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8);
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.connect-btn:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
 }
 
 .disconnect-btn {
   background-color: #f44336;
   color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.8);
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
+.disconnect-btn:hover {
+  background-color: #e53935;
+  transform: scale(1.05);
+}
 .mic-btn, .stop-btn {
   background-color: #ff9800;
   color: white;
@@ -87,10 +136,16 @@
 
 .options {
   position: fixed;
-  top: 50px;
-  right: 50px;
+  top: 30px;
+  right: 60px;
   display: flex;
   gap: 10px;
+}
+
+@media(max-width: 510px){
+  .options{
+    top:110px;
+  }
 }
 
 
@@ -121,9 +176,88 @@
   display: flex;
   gap: 10px;
 }
+@media(max-width: 768px){
+  .end-demo{
+    top:50px;
+    right: 100px;
+  }
+}
 
 .end-demo-btn{
   background-color: #be0010 !important; /* Blue color */
   /* color: white; */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
+}
+
+.chat-bot-icon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden; /* Ensures the image doesn't overflow the circle */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  border: 2px solid white;
+  transition: transform 0.3s ease;
+}
+
+.chat-bot-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image covers the entire circle */
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  border: 8px solid rgba(0, 0, 0, 0.1);
+  border-top: 8px solid #007bff;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.tooltip {
+  position: absolute; /* Change to absolute to position it relative to the chat icon */
+  bottom: 60px; /* Adjust the position to be above the chat icon */
+  right: 50px; /* Align with the chat icon */
+  width: 210px;
+  transform: translateX(0); /* Remove the horizontal translation */
+  background-color: #33333386 !important;
+  color: #fff !important;
+  padding: 8px 12px !important;
+  border-radius: 20px 20px 0px 20px !important;
+  font-size: 14px !important;
+  z-index: 10 !important;
+  animation: fadeInOut 10s ease-in-out !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add a subtle shadow for a floating effect */
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
 }
