@@ -16,7 +16,7 @@ const DrawerContainer = styled.div`
 
 const DrawerToggle = styled.button`
   position: fixed;
-  top: 20%;
+  top: 14%;
   left: ${props => (props.open ? '175px' : '0')};
   transform: translateY(-50%);
   background-color: #007bff;
@@ -30,7 +30,7 @@ const DrawerToggle = styled.button`
 
   &:after {
     content: '${props => (props.open ? '<' : '>')}';
-    font-size: 30px;
+    font-size: 20px;
   }
 `;
 

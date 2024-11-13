@@ -1,11 +1,21 @@
 import "./Avatar.css";
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
-import { createAvatarSynthesizer, createWebRTCConnection, makeBackgroundTransparent } from "./Utility";
+import {
+  createAvatarSynthesizer,
+  createWebRTCConnection,
+  makeBackgroundTransparent,
+} from "./Utility";
 import { avatarAppConfig } from "./config";
 import { useState, useRef, useEffect } from "react";
-import { FaPlug, FaTimes, FaStop, FaCommentDots } from 'react-icons/fa';
+import { FaPlug, FaTimes, FaStop, FaCommentDots } from "react-icons/fa";
 
-export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd }) => {
+
+export const Avatar = ({
+  externalMessage,
+  onDemoComplete,
+  onDemoStart,
+  onDemoEnd,
+}) => {
   const [avatarSynthesizer, setAvatarSynthesizer] = useState(null);
   const [recognizedText, setRecognizedText] = useState("");
   const [responseText, setResponseText] = useState("");
@@ -19,19 +29,26 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
   const myAvatarAudioEleRef = useRef();
   const videoCanvasRef = useRef(null);
 
-  const { iceUrl, iceUsername, iceCredential, azureSpeechServiceKey, azureSpeechServiceRegion } = avatarAppConfig;
+  const {
+    iceUrl,
+    iceUsername,
+    iceCredential,
+    azureSpeechServiceKey,
+    azureSpeechServiceRegion,
+  } = avatarAppConfig;
 
-  const introductionMessage = "Hello! I am your AI car assistant. Would you like a demo of the car or do you have any questions about it?";
-  const demoMessage = "Welcome to the demo of the Nissan Magnite. This car offers an impressive combination of design, technology, and performance...";
-  const continuationMessage = "Upload any video to ask about it, or just ask anything regarding Nissan cars.";
-
+  const introductionMessage =
+    "Hello! I am your AI car assistant. Would you like a demo of the car or do you have any questions about it?";
+  const demoMessage =
+    "Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.";
+  const continuationMessage =
+    "Select a Nissan car video to ask about it and ask anything regarding Nissan cars.";
 
   useEffect(() => {
     // Hide tooltip after 10 seconds
-    const timer = setTimeout(() => setShowTooltip(false), 10000);
+    const timer = setTimeout(() => setShowTooltip(false), 5000);
     return () => clearTimeout(timer);
   }, []);
-
 
   useEffect(() => {
     if (externalMessage) {
@@ -46,7 +63,7 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
   }, [isConnected]);
 
   const handleOnTrack = (event) => {
-    if (event.track.kind === 'video') {
+    if (event.track.kind === "video") {
       const videoElement = myAvatarVideoEleRef.current;
       const canvas = videoCanvasRef.current;
 
@@ -54,52 +71,58 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
       videoElement.autoplay = true;
       videoElement.playsInline = true;
 
-      videoElement.addEventListener('loadedmetadata', () => {
+      videoElement.addEventListener("loadedmetadata", () => {
         canvas.width = videoElement.videoWidth;
         canvas.height = videoElement.videoHeight;
       });
 
-      const context = canvas.getContext('2d', { willReadFrequently: true });
+      const context = canvas.getContext("2d", { willReadFrequently: true });
 
-      videoElement.addEventListener('play', () => {
+      videoElement.addEventListener("play", () => {
         makeBackgroundTransparent(videoElement, canvas, context);
       });
-    } else if (event.track.kind === 'audio') {
+    } else if (event.track.kind === "audio") {
       const audioPlayer = myAvatarAudioEleRef.current;
       audioPlayer.srcObject = event.streams[0];
       audioPlayer.autoplay = true;
       audioPlayer.muted = false;
 
-      audioPlayer.addEventListener('loadedmetadata', () => {
+      audioPlayer.addEventListener("loadedmetadata", () => {
         const playPromise = audioPlayer.play();
         if (playPromise !== undefined) {
-          playPromise.catch(error => {
+          playPromise.catch((error) => {
             console.log("Audio playback failed: ", error);
           });
         }
-      }); 
+      });
     }
   };
 
   const stopSpeaking = () => {
     if (avatarSynthesizer) {
-      avatarSynthesizer.stopSpeakingAsync().then(() => {
-        console.log("Stop speaking request sent.");
-      }).catch((error) => console.error(error));
+      avatarSynthesizer
+        .stopSpeakingAsync()
+        .then(() => {
+          console.log("Stop speaking request sent.");
+        })
+        .catch((error) => console.error(error));
     }
   };
 
   const stopSession = () => {
     if (avatarSynthesizer) {
-      avatarSynthesizer.stopSpeakingAsync().then(() => {
-        avatarSynthesizer.close();
-        resetState();
-      }).catch((error) => console.error(error));
+      avatarSynthesizer
+        .stopSpeakingAsync()
+        .then(() => {
+          avatarSynthesizer.close();
+          resetState();
+        })
+        .catch((error) => console.error(error));
     } else {
       resetState();
     }
   };
-  
+
   const resetState = () => {
     setAvatarSynthesizer(null);
     setRecognizedText("");
@@ -112,56 +135,77 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
 
   const startSession = () => {
     setIsLoading(true); // Set loading to true when session starts
-    const peerConnection = createWebRTCConnection(iceUrl, iceUsername, iceCredential);
+    const peerConnection = createWebRTCConnection(
+      iceUrl,
+      iceUsername,
+      iceCredential
+    );
     peerConnection.ontrack = handleOnTrack;
-    peerConnection.addTransceiver('video', { direction: 'sendrecv' });
-    peerConnection.addTransceiver('audio', { direction: 'sendrecv' });
-  
+    peerConnection.addTransceiver("video", { direction: "sendrecv" });
+    peerConnection.addTransceiver("audio", { direction: "sendrecv" });
+
     const avatarSynthesizerInstance = createAvatarSynthesizer();
     setAvatarSynthesizer(avatarSynthesizerInstance);
-  
+
     peerConnection.oniceconnectionstatechange = () => {
       console.log(`ICE connection state: ${peerConnection.iceConnectionState}`);
-      if (peerConnection.iceConnectionState === 'connected' && avatarSynthesizerInstance) {
+      if (
+        peerConnection.iceConnectionState === "connected" &&
+        avatarSynthesizerInstance
+      ) {
         setIsConnected(true);
         setIsLoading(false); // Set loading to false when connected
-      } else if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'disconnected') {
+      } else if (
+        peerConnection.iceConnectionState === "failed" ||
+        peerConnection.iceConnectionState === "disconnected"
+      ) {
         setIsConnected(false);
         setIsLoading(false); // Ensure loading is false on failure
       }
     };
-  
-    avatarSynthesizerInstance.startAvatarAsync(peerConnection).then(() => {
-      console.log("Avatar started.");
-    }).catch((error) => {
-      console.error("Avatar failed to start. Error: " + error);
-      setIsLoading(false); // Ensure loading is false on error
-    });
-  };
 
+    avatarSynthesizerInstance
+      .startAvatarAsync(peerConnection)
+      .then(() => {
+        console.log("Avatar started.");
+      })
+      .catch((error) => {
+        console.error("Avatar failed to start. Error: " + error);
+        setIsLoading(false); // Ensure loading is false on error
+      });
+  };
 
   const introduceAvatar = () => {
     if (avatarSynthesizer) {
-      avatarSynthesizer.speakTextAsync(introductionMessage).then((result) => {
-        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-          setShowOptions(true);
-        } else {
-          if (result.reason === SpeechSDK.ResultReason.Canceled) {
-            const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
-            if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
-              console.error(cancellationDetails.errorDetails);
+      avatarSynthesizer
+        .speakTextAsync(introductionMessage)
+        .then((result) => {
+          if (
+            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
+          ) {
+            setShowOptions(true);
+          } else {
+            if (result.reason === SpeechSDK.ResultReason.Canceled) {
+              const cancellationDetails =
+                SpeechSDK.CancellationDetails.fromResult(result);
+              if (
+                cancellationDetails.reason ===
+                SpeechSDK.CancellationReason.Error
+              ) {
+                console.error(cancellationDetails.errorDetails);
+              }
             }
           }
-        }
-      }).catch((error) => {
-        console.error("Error synthesizing speech:", error);
-        avatarSynthesizer.close();
-      });
+        })
+        .catch((error) => {
+          console.error("Error synthesizing speech:", error);
+          avatarSynthesizer.close();
+        });
     }
   };
 
   const cleanText = (text) => {
-    return text.replace(/[*_~`]/g, '').replace(/\[doc\d+\]/g, '');
+    return text.replace(/[*_~`]/g, "").replace(/\[doc\d+\]/g, "");
   };
 
   const handleSpeechRecognitionResult = async (userQuery) => {
@@ -174,120 +218,164 @@ export const Avatar = ({ externalMessage, onDemoComplete, onDemoStart, onDemoEnd
       audioPlayer.muted = false;
       const playPromise = audioPlayer.play();
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
+        playPromise.catch((error) => {
           console.log("Audio playback failed: ", error);
         });
       }
-      avatarSynthesizer.speakTextAsync(cleanedResponse).then((result) => {
-        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-          console.log("Speech and avatar synthesized to video stream.");
-        } else {
-          if (result.reason === SpeechSDK.ResultReason.Canceled) {
-            const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
-            if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
-              console.error(cancellationDetails.errorDetails);
+      avatarSynthesizer
+        .speakTextAsync(cleanedResponse)
+        .then((result) => {
+          if (
+            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
+          ) {
+            console.log("Speech and avatar synthesized to video stream.");
+          } else {
+            if (result.reason === SpeechSDK.ResultReason.Canceled) {
+              const cancellationDetails =
+                SpeechSDK.CancellationDetails.fromResult(result);
+              if (
+                cancellationDetails.reason ===
+                SpeechSDK.CancellationReason.Error
+              ) {
+                console.error(cancellationDetails.errorDetails);
+              }
             }
           }
-        }
-      }).catch((error) => {
-        console.error("Error synthesizing speech:", error);
-        avatarSynthesizer.close();
-      });
+        })
+        .catch((error) => {
+          console.error("Error synthesizing speech:", error);
+          avatarSynthesizer.close();
+        });
     }
   };
 
   const handleDemoClick = () => {
     setShowOptions(false);
     setIsDemoRunning(true);
-    document.querySelector('.avatar-card').classList.add('shrink');
+    document.querySelector(".avatar-card").classList.add("shrink");
     onDemoStart(); // Trigger demo start handler
     if (avatarSynthesizer) {
-      avatarSynthesizer.speakTextAsync(demoMessage).then((result) => {
-        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-          console.log("Demo message synthesized to video stream.");
-        } else {
-          if (result.reason === SpeechSDK.ResultReason.Canceled) {
-            const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
-            if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
-              console.error(cancellationDetails.errorDetails);
+      avatarSynthesizer
+        .speakTextAsync(demoMessage)
+        .then((result) => {
+          if (
+            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
+          ) {
+            console.log("Demo message synthesized to video stream.");
+          } else {
+            if (result.reason === SpeechSDK.ResultReason.Canceled) {
+              const cancellationDetails =
+                SpeechSDK.CancellationDetails.fromResult(result);
+              if (
+                cancellationDetails.reason ===
+                SpeechSDK.CancellationReason.Error
+              ) {
+                console.error(cancellationDetails.errorDetails);
+              }
             }
           }
-        }
-      }).catch((error) => {
-        console.error("Error synthesizing demo:", error);
-        avatarSynthesizer.close();
-      });
+        })
+        .catch((error) => {
+          console.error("Error synthesizing demo:", error);
+          avatarSynthesizer.close();
+        });
     }
   };
 
   const handleEndDemoClick = () => {
     setIsDemoRunning(false);
-    document.querySelector('.avatar-card').classList.add('shrink');
+    document.querySelector(".avatar-card").classList.add("shrink");
     onDemoEnd(); // Trigger demo end handler
     onDemoComplete();
     if (avatarSynthesizer) {
-      avatarSynthesizer.stopSpeakingAsync().then(() => {
-        setTimeout(() => {
-          avatarSynthesizer.speakTextAsync(continuationMessage).then((result) => {
-            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-              console.log("Continuation message synthesized.");
-            } else {
-              if (result.reason === SpeechSDK.ResultReason.Canceled) {
-                const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
-                if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
-                  console.error(cancellationDetails.errorDetails);
+      avatarSynthesizer
+        .stopSpeakingAsync()
+        .then(() => {
+          setTimeout(() => {
+            avatarSynthesizer
+              .speakTextAsync(continuationMessage)
+              .then((result) => {
+                if (
+                  result.reason ===
+                  SpeechSDK.ResultReason.SynthesizingAudioCompleted
+                ) {
+                  console.log("Continuation message synthesized.");
+                } else {
+                  if (result.reason === SpeechSDK.ResultReason.Canceled) {
+                    const cancellationDetails =
+                      SpeechSDK.CancellationDetails.fromResult(result);
+                    if (
+                      cancellationDetails.reason ===
+                      SpeechSDK.CancellationReason.Error
+                    ) {
+                      console.error(cancellationDetails.errorDetails);
+                    }
+                  }
                 }
-              }
-            }
-          }).catch((error) => {
-            console.error("Error synthesizing continuation:", error);
-            avatarSynthesizer.close();
-          });
-        }, 1000);
-      }).catch((error) => {
-        console.error("Error stopping demo message:", error);
-      });
+              })
+              .catch((error) => {
+                console.error("Error synthesizing continuation:", error);
+                avatarSynthesizer.close();
+              });
+          }, 1000);
+        })
+        .catch((error) => {
+          console.error("Error stopping demo message:", error);
+        });
     }
   };
 
   const handleContinueClick = () => {
     setShowOptions(false);
     setIsDemoRunning(false);
-    document.querySelector('.avatar-card').classList.add('shrink');
+    document.querySelector(".avatar-card").classList.add("shrink");
     onDemoComplete(); // Ensure the video upload is shown first
     if (avatarSynthesizer) {
-      avatarSynthesizer.speakTextAsync(continuationMessage).then((result) => {
-        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-          console.log("Continuation message synthesized.");
-        } else {
-          if (result.reason === SpeechSDK.ResultReason.Canceled) {
-            const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
-            if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
-              console.error(cancellationDetails.errorDetails);
+      avatarSynthesizer
+        .speakTextAsync(continuationMessage)
+        .then((result) => {
+          if (
+            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
+          ) {
+            console.log("Continuation message synthesized.");
+          } else {
+            if (result.reason === SpeechSDK.ResultReason.Canceled) {
+              const cancellationDetails =
+                SpeechSDK.CancellationDetails.fromResult(result);
+              if (
+                cancellationDetails.reason ===
+                SpeechSDK.CancellationReason.Error
+              ) {
+                console.error(cancellationDetails.errorDetails);
+              }
             }
           }
-        }
-      }).catch((error) => {
-        console.error("Error synthesizing continuation:", error);
-        avatarSynthesizer.close();
-      });
+        })
+        .catch((error) => {
+          console.error("Error synthesizing continuation:", error);
+          avatarSynthesizer.close();
+        });
     }
   };
 
   return (
-    <div className='avatar-container'>
-      {showTooltip && <div className="tooltip">Let's explore Nissan cars with a new avatar experience!</div>}
-       {!isConnected && !isLoading && (
+    <div className="avatar-container">
+      {showTooltip && (
+        <div className="tooltip">
+          Let's explore Nissan cars with a new avatar experience!
+        </div>
+      )}
+      {!isConnected && !isLoading && (
         <div className="chat-bot-icon" onClick={startSession}>
           <img src="avatarIcon.png" alt="Chat Bot" className="chat-bot-image" />
         </div>
       )}
-    
-{isLoading && (
-  <div className="loading-overlay">
-    <div className="loading-spinner"></div>
-  </div>
-)}
+
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+        </div>
+      )}
       {showOptions && (
         <div className="options">
           <button className="btn demo-btn" onClick={handleDemoClick}>

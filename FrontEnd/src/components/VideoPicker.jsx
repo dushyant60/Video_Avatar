@@ -8,6 +8,7 @@ const VideoPickerContainer = styled.div`
   flex-direction: column;
   align-items: center;
   position: relative;
+      z-index: 9999;
 `;
 
 const VideoSelect = styled.select`

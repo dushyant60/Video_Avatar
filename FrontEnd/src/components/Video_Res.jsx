@@ -7,8 +7,8 @@ import { avatarAppConfig } from './config';
 import { FaMicrophone, FaMicrophoneSlash, FaPaperPlane, FaStopCircle, FaVideoSlash } from 'react-icons/fa';
 import VideoPicker from './VideoPicker'; // Import the new component
 import ScreenshotDrawer from './ScreenshotDrawer';
-import  { ReactTyped } from 'react-typed';
-import { Typewriter } from 'react-simple-typewriter';
+import Caption from './Caption';
+import MessageDrawer from './MessageDrawer';
 const AppContainer = styled.div`
   // display: flex;
   // flex-direction: column;
@@ -33,6 +33,7 @@ const DemoVideoContainer = styled.div`
   align-items: center;
   width: 100%;
   height: calc(100vh - 100px);
+  margin-top: 45px; // Add margin to lower the position
 `;
  
 const HiddenWrapper = styled.div`
@@ -152,22 +153,25 @@ const SendButton = styled.button`
 const AvatarContainer = styled.div`
   z-index: 10;
   position: absolute;
-  bottom: 50px;
-  right: 20px;
+  bottom: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end; 
   max-width: 40%;
-  height: 87%;
-  justify-content: flex-end;
+  height: 95%;
+  // justify-content: flex-end;
 `;
  
 const MessageList = styled.div`
   width: 100%;
+  min-width:400px;
   // height: 75%;
   padding: 10px;
   box-sizing: border-box;
   overflow-y: scroll;
+  max-height: 35%;
+    z-index: 99;
   &::-webkit-scrollbar {
     width: 0px;
     background: transparent;
@@ -180,29 +184,6 @@ const MessageList = styled.div`
   }
 `;
 
-
-const Caption = styled.div`
-  display: none;
-  z-index: 9999;
-
-  @media (max-width: 768px) {
-    display: block;
-    position: fixed;
-    bottom: 120px;
-    left: 0;
-    width: 70%;
-    padding: 20px;
-    color: white;
-    text-align: center;
-    border-radius: 8px;
-    font-size: 16px;
-
-
-
-
-   
-  }
-`;
 
  
 const Message = styled.div`
@@ -223,25 +204,25 @@ const Message = styled.div`
   }
 `;
  
-const ScreenshotContainer = styled.div`
-  display: ${props => props.show ? 'flex' : 'none'};
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
-  background-color: #f1f1f1;
-  border-radius: 8px;
-  margin-top: 20px;
-  position: absolute;
-  bottom: 120px;  
-`;
+// const ScreenshotContainer = styled.div`
+//   display: ${props => props.show ? 'flex' : 'none'};
+//   flex-wrap: wrap;
+//   gap: 10px;
+//   padding: 10px;
+//   background-color: #f1f1f1;
+//   border-radius: 8px;
+//   margin-top: 20px;
+//   position: absolute;
+//   bottom: 120px;  
+// `;
  
-const ScreenshotThumbnail = styled.div`
-  width: 150px;
-  height: 100px;
-  background-size: cover;
-  background-position: center;
-  border-radius: 8px;
-`;
+// const ScreenshotThumbnail = styled.div`
+//   width: 150px;
+//   height: 100px;
+//   background-size: cover;
+//   background-position: center;
+//   border-radius: 8px;
+// `;
 
 const StopButton = styled.button`
   padding: 12px;
@@ -280,6 +261,12 @@ const App = () => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isMessageDrawerOpen, setIsMessageDrawerOpen] = useState(false);
+
+  const toggleMessageDrawer = () => {
+    setIsMessageDrawerOpen(!isMessageDrawerOpen);
+  };
+
 
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
@@ -371,7 +358,7 @@ const App = () => {
       const data = await response.json();
       const cleanMessage = parseResponse(data.message);
       setStatus(cleanMessage);
- 
+
       const newAssistantMessage = { role: 'assistant', content: [{'type':'text','text':cleanMessage}] };
       const finalMessages = [...updatedMessages, newAssistantMessage];
       setMessages(finalMessages);
@@ -497,47 +484,20 @@ const App = () => {
             <VideoPicker onSelect={handleVideoSelect} /> {/* Integrate the VideoPicker component */}
           </UploadOverlay>
         </HiddenWrapper>
-      </VideoContainer>
- 
-      <AvatarContainer>
+        <AvatarContainer>
       <MessageList>
         {messages.map((msg, index) => (
           <Message key={index} isQuestion={msg.role === 'user'}>
-            <span dangerouslySetInnerHTML={{ __html: msg.role === 'user' ? `Q: ${msg.content[0].text}` : `A: ${msg.content[0].text}` }} />
+            <span dangerouslySetInnerHTML={{ __html: msg.role === 'user' ? ` ${msg.content[0].text}` : ` ${msg.content[0].text}` }} />
           </Message>
         ))}
       </MessageList>
 
-      {/* Display latest assistant message as a caption below 768px */}
-      {/* {messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
-        <Caption>
-          {`${messages[messages.length - 1].content[0].text}`}
-        </Caption>
-      )} */}
-      {messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
-//   <Caption>
-//     <ReactTyped
-//   strings={[messages[messages.length - 1].content[0].text]}
-//   typeSpeed={0}         // Very fast typing effect
-//   backSpeed={0}         // No backspacing effect
-//   showCursor={false}    // Hide the cursor if you don't want it
-// />
-
-//   </Caption>
-<Caption>
-  <Typewriter
-    words={[messages[messages.length - 1].content[0].text]}
-    loop={1}            // No looping
-    typeSpeed={1}       // Ultra-fast typing speed
-    deleteSpeed={0}     // No backspacing speed (if needed)
-    cursor={false}      // Hide cursor
-  />
-</Caption>
-)}
-
-        <Avatar externalMessage={status} onDemoComplete={handleDemoComplete} onDemoStart={handleDemoStart} onDemoEnd={handleDemoEnd} />
+      <Avatar externalMessage={status} onDemoComplete={handleDemoComplete} onDemoStart={handleDemoStart} onDemoEnd={handleDemoEnd} />
       </AvatarContainer>
- 
+         
+      </VideoContainer>
+
       <HiddenWrapper show={showHiddenContent}>
         <ChatContainer>
           <ChatInput
@@ -565,6 +525,14 @@ const App = () => {
             />
           ))}
         </ScreenshotContainer> */}
+
+<MessageDrawer
+  messages={messages}
+  open={isMessageDrawerOpen}
+  toggleDrawer={toggleMessageDrawer}
+/>
+
+        
       </HiddenWrapper>
     </AppContainer>
   );
