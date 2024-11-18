@@ -22,15 +22,107 @@ const {
  * @param {string} iceServerCredential - ICE server credential.
  * @returns {RTCPeerConnection} - The created RTCPeerConnection.
  */
-export const createWebRTCConnection = (iceServerUrl, iceServerUsername, iceServerCredential) => {
-  return new RTCPeerConnection({
-    iceServers: [{
-      urls: [iceServerUrl],
-      username: iceServerUsername,
-      credential: iceServerCredential
-    }]
-  });
+// export const createWebRTCConnection = (iceServerUrl, iceServerUsername, iceServerCredential) => {
+//   return new RTCPeerConnection({
+//     iceServers: [{
+//       urls: [iceServerUrl],
+//       username: iceServerUsername,
+//       credential: iceServerCredential
+//     }]
+//   });
+// };
+
+// const iceServersList = [ 
+//   { urls: 'stun:stun.l.google.com:19302' }, 
+
+//   { urls: 'stun:stun1.l.google.com:19302' }, 
+
+//   { urls: 'stun:stun2.l.google.com:19302' }, 
+
+//   { urls: 'stun:stun3.l.google.com:19302' }, 
+
+//   { urls: 'stun:stun4.l.google.com:19302' },  
+
+// ]; 
+// let currentServerIndex = 0; 
+
+// export const createWebRTCConnection = () => { 
+//   const iceServers = [iceServersList[currentServerIndex]]; 
+//   currentServerIndex = (currentServerIndex + 1) % iceServersList.length; 
+//   return new RTCPeerConnection({ iceServers }); 
+// }
+
+// export const createWebRTCConnection = () => {
+// const iceServers = [
+//     { 
+//       urls: 'turn:20.244.84.44:3478?transport=udp',
+//       username: 'turnonelogica',
+//       credential: 'Onelogica@123'
+//     },
+// ];
+//   return new RTCPeerConnection({ iceServers });
+// };
+
+/**
+ * Fetch ICE server configuration dynamically from the Speech Service.
+ * @returns {Promise<Object>} ICE server configuration.
+ */
+const fetchDynamicIceServerConfig = async () => {
+  const url = `https://${cogSvcRegion}.tts.speech.microsoft.com/cognitiveservices/avatar/relay/token/v1`;
+  
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Ocp-Apim-Subscription-Key": cogSvcSubKey,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ICE server info: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return {
+      urls: [data.Urls],
+      username: data.Username,
+      credential: data.Password
+      ,
+    };
+  } catch (error) {
+    console.error("Error fetching ICE server:", error);
+    throw error;
+  }
 };
+
+/**
+ * Create a new WebRTC PeerConnection dynamically using ICE server info.
+ * @returns {Promise<RTCPeerConnection>} A new WebRTC PeerConnection instance.
+ */
+export const createWebRTCConnection = async () => {
+  try {
+    const iceServerConfig = await fetchDynamicIceServerConfig();
+    
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [iceServerConfig],
+    });
+
+    // Optional: Monitor connection state
+    peerConnection.oniceconnectionstatechange = () => {
+      console.log("ICE Connection State:", peerConnection.iceConnectionState);
+      if (peerConnection.iceConnectionState === "failed") {
+        console.error("ICE Connection failed");
+        // Optionally handle reconnection
+      }
+    };
+
+    return peerConnection;
+  } catch (error) {
+    console.error("Failed to create WebRTC connection:", error);
+    throw error;
+  }
+};
+
 
 /**
  * Create an avatar synthesizer using Microsoft Speech SDK.
@@ -50,7 +142,7 @@ export const createAvatarSynthesizer = () => {
 
   avatarSynthesizer.avatarEventReceived = (s, e) => {
     const offsetMessage = e.offset === 0 ? "" : `, offset from session start: ${e.offset / 10000}ms.`;
-    console.log(`[${new Date().toISOString()}] Event received: ${e.description}${offsetMessage}`);
+    // console.log(`[${new Date().toISOString()}] Event received: ${e.description}${offsetMessage}`);
   };
 
   return avatarSynthesizer;

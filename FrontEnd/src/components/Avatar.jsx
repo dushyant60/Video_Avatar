@@ -133,46 +133,76 @@ export const Avatar = ({
     // Add any other state resets here if needed
   };
 
-  const startSession = () => {
-    setIsLoading(true); // Set loading to true when session starts
-    const peerConnection = createWebRTCConnection(
-      iceUrl,
-      iceUsername,
-      iceCredential
-    );
-    peerConnection.ontrack = handleOnTrack;
-    peerConnection.addTransceiver("video", { direction: "sendrecv" });
-    peerConnection.addTransceiver("audio", { direction: "sendrecv" });
+  // const startSession = () => {
+  //   setIsLoading(true); // Indicate the session is starting
+  
+  //   const peerConnection = createWebRTCConnection();
+  //   const avatarSynthesizerInstance = createAvatarSynthesizer();
+  
+  //   setAvatarSynthesizer(avatarSynthesizerInstance);
+  
+  //   peerConnection.ontrack = handleOnTrack; // Handle incoming media streams
+  //   peerConnection.addTransceiver("video", { direction: "sendrecv" });
+  //   peerConnection.addTransceiver("audio", { direction: "sendrecv" });
+  
+  //   peerConnection.oniceconnectionstatechange = () => {
+  //     const state = peerConnection.iceConnectionState;
+  //     console.log(`ICE connection state: ${state}`);
+  
+  //     if (state === "connected") {
+  //       setIsConnected(true);
+  //       setIsLoading(false);
+  //     } else if (state === "failed" || state === "disconnected") {
+  //       setIsConnected(false);
+  //       setIsLoading(false);
+  //     }
+  //   };
+  
+  //   avatarSynthesizerInstance
+  //     .startAvatarAsync(peerConnection)
+  //     .then(() => console.log("Avatar started."))
+  //     .catch((error) => {
+  //       console.error("Avatar failed to start:", error);
+  //       setIsLoading(false);
+  //     });
+  // };
 
-    const avatarSynthesizerInstance = createAvatarSynthesizer();
-    setAvatarSynthesizer(avatarSynthesizerInstance);
-
-    peerConnection.oniceconnectionstatechange = () => {
-      console.log(`ICE connection state: ${peerConnection.iceConnectionState}`);
-      if (
-        peerConnection.iceConnectionState === "connected" &&
-        avatarSynthesizerInstance
-      ) {
-        setIsConnected(true);
-        setIsLoading(false); // Set loading to false when connected
-      } else if (
-        peerConnection.iceConnectionState === "failed" ||
-        peerConnection.iceConnectionState === "disconnected"
-      ) {
-        setIsConnected(false);
-        setIsLoading(false); // Ensure loading is false on failure
-      }
-    };
-
-    avatarSynthesizerInstance
-      .startAvatarAsync(peerConnection)
-      .then(() => {
-        console.log("Avatar started.");
-      })
-      .catch((error) => {
-        console.error("Avatar failed to start. Error: " + error);
-        setIsLoading(false); // Ensure loading is false on error
-      });
+  const startSession = async () => {
+    setIsLoading(true); // Indicate the session is starting
+    
+    try {
+      // Wait for the WebRTC connection to be established
+      const peerConnection = await createWebRTCConnection();
+      const avatarSynthesizerInstance = createAvatarSynthesizer();
+      
+      setAvatarSynthesizer(avatarSynthesizerInstance);
+    
+      // Handle incoming media streams
+      peerConnection.ontrack = handleOnTrack;
+      peerConnection.addTransceiver("video", { direction: "sendrecv" });
+      peerConnection.addTransceiver("audio", { direction: "sendrecv" });
+    
+      // Monitor ICE connection state changes
+      peerConnection.oniceconnectionstatechange = () => {
+        const state = peerConnection.iceConnectionState;
+        console.log(`ICE connection state: ${state}`);
+    
+        if (state === "connected") {
+          setIsConnected(true);
+          setIsLoading(false);
+        } else if (state === "failed" || state === "disconnected") {
+          setIsConnected(false);
+          setIsLoading(false);
+        }
+      };
+    
+      // Start the avatar session asynchronously
+      await avatarSynthesizerInstance.startAvatarAsync(peerConnection);
+      console.log("Avatar started.");
+    } catch (error) {
+      console.error("Error starting session:", error);
+      setIsLoading(false);
+    }
   };
 
   const introduceAvatar = () => {

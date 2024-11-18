@@ -459,7 +459,7 @@ const App = () => {
         {isDemoRunning && (
           <DemoVideoContainer>
             <video ref={demoVideoRef} autoPlay muted style={{ borderRadius: "20px", width: "100%", height: "calc(100vh - 100px)", objectFit: "cover" }}>
-              <source src="/demo_video.mp4" type="video/mp4" />
+              <source src="https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/2021 Nissan Magnite.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </DemoVideoContainer>
