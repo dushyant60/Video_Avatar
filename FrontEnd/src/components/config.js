@@ -1,8 +1,8 @@
 
 export const avatarAppConfig = {
-    cogSvcRegion : "westus2",
-    cogSvcSubKey :"54ead5b1523b4e1da7e6237a2925ca52",
-    voiceName : "en-US-AndrewNeural",
+    cogSvcRegion : "swedencentral",
+    cogSvcSubKey :"5cacf1c5d3c44cee86961822c8c8e85e",
+    voiceName : "en-US-AlloyMultilingualNeural",
     avatarCharacter : "Max",
     avatarStyle : "business",
     avatarBackgroundColor : "#00FF00FF",
@@ -11,7 +11,7 @@ export const avatarAppConfig = {
     // iceCredential : "QeefZg359RczJyIG7cNBcTR/Fjg=",
     azureOpenAIEndpoint: "https://web-dpxjzr3ghqbg4-docker-dev-version.azurewebsites.net",
     azureOpenAIKey:"fdb12bb67a764cd2b74676dd5afa58d3",
-    azureSpeechServiceRegion:"westus2",
-    azureSpeechServiceKey:"54ead5b1523b4e1da7e6237a2925ca52"
+    azureSpeechServiceRegion:"swedencentral",
+    azureSpeechServiceKey:"5cacf1c5d3c44cee86961822c8c8e85e"
 
   } 
