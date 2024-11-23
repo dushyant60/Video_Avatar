@@ -38,11 +38,11 @@ export const Avatar = ({
   } = avatarAppConfig;
 
   const introductionMessage =
-    "Hello! I am your AI car assistant. Would you like a demo of the car or do you have any questions about it?";
+    "Hello! I am your AI assistant. Would you like a demo of the Royal Enfield Bike or do you have any questions about it?";
   const demoMessage =
-    "Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.";
+    "Welcome to the Royal Enfield Classic 350, where timeless design meets modern engineering. With its iconic teardrop tank, vintage chrome accents, and signature headlamp, the Classic 350 embodies motorcycling heritage. Powered by a refined 349cc J-series engine, it offers smooth performance, exceptional fuel efficiency, and unmatched riding comfort—ideal for both city commutes and open-road adventures. Safety is paramount, with dual-channel ABS, disc brakes, and a sturdy chassis ensuring a confident ride. Modern touches like a semi-digital cluster and turn-by-turn navigation seamlessly blend tradition with technology. The Royal Enfield Classic 350 isn’t just a motorcycle—it’s a legacy on wheels. Ride with purpose. Ride Royal";
   const continuationMessage =
-    "Select a Nissan car video to ask about it and ask anything regarding Nissan cars.";
+    "You can ask me anything regarding Royal Enfield Classic 350.";
 
   useEffect(() => {
     // Hide tooltip after 10 seconds
@@ -392,12 +392,12 @@ export const Avatar = ({
     <div className="avatar-container">
       {showTooltip && (
         <div className="tooltip">
-          Let's explore Nissan cars with a new avatar experience!
+          Let's explore Royal Enfield Bikes with a new avatar experience!
         </div>
       )}
       {!isConnected && !isLoading && (
         <div className="chat-bot-icon" onClick={startSession}>
-          <img src="avatarIcon.png" alt="Chat Bot" className="chat-bot-image" />
+          <img src="avatar__icon.png" alt="Chat Bot" className="chat-bot-image" />
         </div>
       )}
 

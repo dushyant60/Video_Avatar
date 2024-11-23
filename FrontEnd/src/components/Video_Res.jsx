@@ -15,7 +15,7 @@ const AppContainer = styled.div`
   // align-items: center;
   height: 100vh;
   width: 100vw;
-  background: url('/bg.png') no-repeat center center;
+  background: url('/RE_bg.png') no-repeat center center;
   background-size: cover;
   position: relative;
   padding: 20px;
@@ -245,7 +245,7 @@ const StopButton = styled.button`
 `;
  
 const App = () => {
-  const [videoSrc, setVideoSrc] = useState('');
+  const [videoSrc, setVideoSrc] = useState('https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/RE350C_2.mp4');
   const [userPrompt, setUserPrompt] = useState('');
   const [status, setStatus] = useState('');
   const [screenshots, setScreenshots] = useState([]);
@@ -459,14 +459,15 @@ const App = () => {
         {isDemoRunning && (
           <DemoVideoContainer>
             <video ref={demoVideoRef} autoPlay muted style={{ borderRadius: "20px", width: "100%", height: "calc(100vh - 100px)", objectFit: "cover" }}>
-              <source src="https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/2021 Nissan Magnite.mp4" type="video/mp4" />
+              <source src="https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/RE350C_2.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </DemoVideoContainer>
         )}
         <HiddenWrapper show={showHiddenContent}>
-          <StyledVideo ref={videoRef} src={videoSrc} loop controls controlsList='nofullscreen' autoPlay muted />
-          <UploadOverlay show={!videoSrc}>
+          <StyledVideo ref={videoRef} src={videoSrc} loop controls controlsList='nofullscreen' autoPlay muted crossOrigin="anonymous"/>
+
+          {/* <UploadOverlay show={!videoSrc}>
             <UploadButton>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -481,8 +482,8 @@ const App = () => {
               Upload Video
               <input type="file" accept="video/*" onChange={handleVideoUpload} />
             </UploadButton>
-            <VideoPicker onSelect={handleVideoSelect} /> {/* Integrate the VideoPicker component */}
-          </UploadOverlay>
+            <VideoPicker onSelect={handleVideoSelect} /> Integrate the VideoPicker component
+          </UploadOverlay> */}
         </HiddenWrapper>
         <AvatarContainer>
       <MessageList>
@@ -510,7 +511,7 @@ const App = () => {
           <SendButton onClick={handleMicrophoneClick}>
             {isMicrophoneActive ? <FaMicrophoneSlash /> : <FaMicrophone />}
           </SendButton>
-          {videoSrc && <StopButton onClick={handleStopVideo}><FaVideoSlash/></StopButton>}
+          {/* {videoSrc && <StopButton onClick={handleStopVideo}><FaVideoSlash/></StopButton>} */}
         </ChatContainer>
         <ScreenshotDrawer
           screenshots={screenshots}
