@@ -4,8 +4,9 @@ import {
   createAvatarSynthesizer,
   createWebRTCConnection,
   makeBackgroundTransparent,
-} from "./Utility";
-import { avatarAppConfig } from "./config";
+} from "../utility/Utility";
+import { avatarAppConfig } from "../utility/config";
+import { startSession } from "../utility/sessionutils";
 import { useState, useRef, useEffect } from "react";
 import { FaPlug, FaTimes, FaStop, FaCommentDots } from "react-icons/fa";
 
@@ -24,6 +25,8 @@ export const Avatar = ({
   const [isDemoRunning, setIsDemoRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // New loading state
   const [showTooltip, setShowTooltip] = useState(true); // New tooltip state
+  const [isVideoVisible, setIsVideoVisible] = useState(false);
+
 
   const myAvatarVideoEleRef = useRef();
   const myAvatarAudioEleRef = useRef();
@@ -42,7 +45,7 @@ export const Avatar = ({
   const demoMessage =
     "Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.";
   const continuationMessage =
-    "Select a Nissan car video to ask about it and ask anything regarding Nissan cars.";
+    "You can ask anything regarding Nissan Magnite.";
 
   useEffect(() => {
     // Hide tooltip after 10 seconds
@@ -133,77 +136,13 @@ export const Avatar = ({
     // Add any other state resets here if needed
   };
 
-  // const startSession = () => {
-  //   setIsLoading(true); // Indicate the session is starting
-  
-  //   const peerConnection = createWebRTCConnection();
-  //   const avatarSynthesizerInstance = createAvatarSynthesizer();
-  
-  //   setAvatarSynthesizer(avatarSynthesizerInstance);
-  
-  //   peerConnection.ontrack = handleOnTrack; // Handle incoming media streams
-  //   peerConnection.addTransceiver("video", { direction: "sendrecv" });
-  //   peerConnection.addTransceiver("audio", { direction: "sendrecv" });
-  
-  //   peerConnection.oniceconnectionstatechange = () => {
-  //     const state = peerConnection.iceConnectionState;
-  //     console.log(`ICE connection state: ${state}`);
-  
-  //     if (state === "connected") {
-  //       setIsConnected(true);
-  //       setIsLoading(false);
-  //     } else if (state === "failed" || state === "disconnected") {
-  //       setIsConnected(false);
-  //       setIsLoading(false);
-  //     }
-  //   };
-  
-  //   avatarSynthesizerInstance
-  //     .startAvatarAsync(peerConnection)
-  //     .then(() => console.log("Avatar started."))
-  //     .catch((error) => {
-  //       console.error("Avatar failed to start:", error);
-  //       setIsLoading(false);
-  //     });
-  // };
 
-  const startSession = async () => {
-    setIsLoading(true); // Indicate the session is starting
-    
-    try {
-      // Wait for the WebRTC connection to be established
-      const peerConnection = await createWebRTCConnection();
-      const avatarSynthesizerInstance = createAvatarSynthesizer();
-      
-      setAvatarSynthesizer(avatarSynthesizerInstance);
-    
-      // Handle incoming media streams
-      peerConnection.ontrack = handleOnTrack;
-      peerConnection.addTransceiver("video", { direction: "sendrecv" });
-      peerConnection.addTransceiver("audio", { direction: "sendrecv" });
-    
-      // Monitor ICE connection state changes
-      peerConnection.oniceconnectionstatechange = () => {
-        const state = peerConnection.iceConnectionState;
-        console.log(`ICE connection state: ${state}`);
-    
-        if (state === "connected") {
-          setIsConnected(true);
-          setIsLoading(false);
-        } else if (state === "failed" || state === "disconnected") {
-          setIsConnected(false);
-          setIsLoading(false);
-        }
-      };
-    
-      // Start the avatar session asynchronously
-      await avatarSynthesizerInstance.startAvatarAsync(peerConnection);
-      console.log("Avatar started.");
-    } catch (error) {
-      console.error("Error starting session:", error);
-      setIsLoading(false);
-    }
+  const startAvatarSession = () => {
+    startSession(setIsLoading, setIsConnected, setAvatarSynthesizer, handleOnTrack);
+    setIsVideoVisible(true);
+
   };
+
 
   const introduceAvatar = () => {
     if (avatarSynthesizer) {
@@ -387,6 +326,7 @@ export const Avatar = ({
         });
     }
   };
+  
 
   return (
     <div className="avatar-container">
@@ -396,7 +336,7 @@ export const Avatar = ({
         </div>
       )}
       {!isConnected && !isLoading && (
-        <div className="chat-bot-icon" onClick={startSession}>
+        <div className="chat-bot-icon" onClick={startAvatarSession}>
           <img src="avatarIcon.png" alt="Chat Bot" className="chat-bot-image" />
         </div>
       )}
@@ -423,13 +363,15 @@ export const Avatar = ({
           </button>
         </div>
       )}
-      <div className="avatar-card">
-        <div className="avatar-video-wrapper">
-          <video ref={myAvatarVideoEleRef} className="avatar-video"></video>
-          <canvas ref={videoCanvasRef} className="video-canvas"></canvas>
-          <audio ref={myAvatarAudioEleRef}></audio>
+      {isVideoVisible && (
+        <div className="avatar-card">
+          <div className="avatar-video-wrapper">
+            <video ref={myAvatarVideoEleRef} className="avatar-video"></video>
+            <canvas ref={videoCanvasRef} className="video-canvas"></canvas>
+            <audio ref={myAvatarAudioEleRef}></audio>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

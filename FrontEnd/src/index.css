@@ -929,3 +929,7 @@ html {
     cursor: pointer;
     z-index: 1003;
 }
+.no-scroll {
+    overflow: hidden;
+  }
+
