@@ -42,7 +42,7 @@ export const Avatar = ({
   const demoMessage =
     "Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.";
   const continuationMessage =
-    "Select a Nissan car video to ask about it and ask anything regarding Nissan cars.";
+    "You can ask me anything regarding Nissan Magnite.";
 
   useEffect(() => {
     // Hide tooltip after 10 seconds

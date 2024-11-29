@@ -245,7 +245,9 @@ const StopButton = styled.button`
 `;
  
 const App = () => {
-  const [videoSrc, setVideoSrc] = useState('');
+  const [videoSrc, setVideoSrc] = useState(
+    "https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/2021 Nissan Magnite.mp4"
+  );
   const [userPrompt, setUserPrompt] = useState('');
   const [status, setStatus] = useState('');
   const [screenshots, setScreenshots] = useState([]);
@@ -466,7 +468,7 @@ const App = () => {
         )}
         <HiddenWrapper show={showHiddenContent}>
           <StyledVideo ref={videoRef} src={videoSrc} loop controls controlsList='nofullscreen' autoPlay muted />
-          <UploadOverlay show={!videoSrc}>
+          {/* <UploadOverlay show={!videoSrc}>
             <UploadButton>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -481,8 +483,8 @@ const App = () => {
               Upload Video
               <input type="file" accept="video/*" onChange={handleVideoUpload} />
             </UploadButton>
-            <VideoPicker onSelect={handleVideoSelect} /> {/* Integrate the VideoPicker component */}
-          </UploadOverlay>
+            <VideoPicker onSelect={handleVideoSelect} />
+          </UploadOverlay> */}
         </HiddenWrapper>
         <AvatarContainer>
       <MessageList>
