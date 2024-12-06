@@ -37,12 +37,14 @@ export const Avatar = ({
     azureSpeechServiceRegion,
   } = avatarAppConfig;
 
-  const introductionMessage =
-    "Hello! I am your AI assistant. Would you like a demo of the Royal Enfield Bike or do you have any questions about it?";
-  const demoMessage =
-    "Welcome to the Royal Enfield Classic 350, where timeless design meets modern engineering. With its iconic teardrop tank, vintage chrome accents, and signature headlamp, the Classic 350 embodies motorcycling heritage. Powered by a refined 349cc J-series engine, it offers smooth performance, exceptional fuel efficiency, and unmatched riding comfort—ideal for both city commutes and open-road adventures. Safety is paramount, with dual-channel ABS, disc brakes, and a sturdy chassis ensuring a confident ride. Modern touches like a semi-digital cluster and turn-by-turn navigation seamlessly blend tradition with technology. The Royal Enfield Classic 350 isn’t just a motorcycle—it’s a legacy on wheels. Ride with purpose. Ride Royal";
-  const continuationMessage =
-    "You can ask me anything regarding Royal Enfield Classic 350.";
+  const introductionMessage = 
+  "Hello! I am your AI assistant. How can I assist you today? Would you like a demo of CBRE’s services or do you have any specific questions about commercial real estate?";
+
+const demoMessage = 
+  "Welcome to CBRE, the world’s largest commercial real estate services firm. We provide comprehensive solutions across leasing, capital markets, property management, valuation, and advisory services. With a global presence spanning over 100 countries, CBRE leverages extensive research and market analysis to deliver tailored solutions for office, retail, industrial, and multifamily properties. From finding the perfect location for your business to optimizing your portfolio, we’re committed to driving value and empowering your success. Discover how CBRE’s expertise can elevate your real estate strategy.";
+
+const continuationMessage = 
+  "Feel free to ask me anything about CBRE’s services or how we can support your commercial real estate needs.";
 
   useEffect(() => {
     // Hide tooltip after 10 seconds
@@ -392,7 +394,7 @@ export const Avatar = ({
     <div className="avatar-container">
       {showTooltip && (
         <div className="tooltip">
-          Let's explore Royal Enfield Bikes with a new avatar experience!
+          Let's explore CBRE with a new avatar experience!
         </div>
       )}
       {!isConnected && !isLoading && (

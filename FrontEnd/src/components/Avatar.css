@@ -211,7 +211,7 @@
   align-items: center;
   box-shadow: 0 4px 6px rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  border: 4px solid rgb(55, 52, 245);
+  border: 4px solid rgb(255, 255, 255);
   transition: transform 0.3s ease;
   z-index: 99;
 }
@@ -255,8 +255,8 @@
   right: 50px; /* Align with the chat icon */
   width: 210px;
   transform: translateX(0); /* Remove the horizontal translation */
-  background-color: #33333386 !important;
-  color: #fff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
   padding: 8px 12px !important;
   border-radius: 20px 20px 0px 20px !important;
   font-size: 14px !important;

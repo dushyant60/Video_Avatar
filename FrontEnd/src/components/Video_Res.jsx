@@ -15,7 +15,7 @@ const AppContainer = styled.div`
   // align-items: center;
   height: 100vh;
   width: 100vw;
-  background: url('/RE_bg.png') no-repeat center center;
+  background: url('/CBRE_bg.jpg') no-repeat center center;
   background-size: cover;
   position: relative;
   padding: 20px;
@@ -245,7 +245,7 @@ const StopButton = styled.button`
 `;
  
 const App = () => {
-  const [videoSrc, setVideoSrc] = useState('https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/RE350C_2.mp4');
+  const [videoSrc, setVideoSrc] = useState('https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/CBRE_Video.mp4');
   const [userPrompt, setUserPrompt] = useState('');
   const [status, setStatus] = useState('');
   const [screenshots, setScreenshots] = useState([]);
@@ -459,7 +459,7 @@ const App = () => {
         {isDemoRunning && (
           <DemoVideoContainer>
             <video ref={demoVideoRef} autoPlay muted style={{ borderRadius: "20px", width: "100%", height: "calc(100vh - 100px)", objectFit: "cover" }}>
-              <source src="https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/RE350C_2.mp4" type="video/mp4" />
+              <source src="https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/CBRE_Video.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </DemoVideoContainer>
