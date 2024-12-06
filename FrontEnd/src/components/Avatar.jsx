@@ -6,9 +6,11 @@ import {
   makeBackgroundTransparent,
 } from "../utility/Utility";
 import { avatarAppConfig } from "../utility/config";
-import { startSession } from "../utility/sessionutils";
 import { useState, useRef, useEffect } from "react";
-import { FaPlug, FaTimes, FaStop, FaCommentDots } from "react-icons/fa";
+// import { FaPlug, FaTimes, FaStop, FaCommentDots } from "react-icons/fa";
+import {startSession} from "../utility/sessionutils";
+import { FaStop } from "react-icons/fa";
+import { UserInfoForm } from "./UserInfoForm";
 
 
 export const Avatar = ({
@@ -16,6 +18,8 @@ export const Avatar = ({
   onDemoComplete,
   onDemoStart,
   onDemoEnd,
+  onSessionStart, 
+  onSessionEnd,
 }) => {
   const [avatarSynthesizer, setAvatarSynthesizer] = useState(null);
   const [recognizedText, setRecognizedText] = useState("");
@@ -27,10 +31,19 @@ export const Avatar = ({
   const [showTooltip, setShowTooltip] = useState(true); // New tooltip state
   const [isVideoVisible, setIsVideoVisible] = useState(false);
 
+  const [showForm, setShowForm] = useState(true); // Show form initially
+  const [userInfo, setUserInfo] = useState(null); // Store user data
 
   const myAvatarVideoEleRef = useRef();
   const myAvatarAudioEleRef = useRef();
   const videoCanvasRef = useRef(null);
+
+  const handleSaveUserInfo = (data) => {
+    setUserInfo(data);
+    setShowForm(false); // Hide the form
+    onSessionStart(); // Proceed with session start
+    console.log("User Info Saved:", data); // Optionally send to server
+  };
 
   const {
     iceUrl,
@@ -45,7 +58,7 @@ export const Avatar = ({
   const demoMessage =
     "Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.";
   const continuationMessage =
-    "You can ask anything regarding Nissan Magnite.";
+    "You can ask me anything regarding Nissan Magnite.";
 
   useEffect(() => {
     // Hide tooltip after 10 seconds
@@ -140,10 +153,8 @@ export const Avatar = ({
   const startAvatarSession = () => {
     startSession(setIsLoading, setIsConnected, setAvatarSynthesizer, handleOnTrack);
     setIsVideoVisible(true);
-
-  };
-
-
+    onSessionStart();
+  }
   const introduceAvatar = () => {
     if (avatarSynthesizer) {
       avatarSynthesizer
@@ -326,7 +337,6 @@ export const Avatar = ({
         });
     }
   };
-  
 
   return (
     <div className="avatar-container">
@@ -335,43 +345,53 @@ export const Avatar = ({
           Let's explore Nissan cars with a new avatar experience!
         </div>
       )}
-      {!isConnected && !isLoading && (
-        <div className="chat-bot-icon" onClick={startAvatarSession}>
-          <img src="avatarIcon.png" alt="Chat Bot" className="chat-bot-image" />
-        </div>
-      )}
-
-      {isLoading && (
-        <div className="loading-overlay">
-          <div className="loading-spinner"></div>
-        </div>
-      )}
-      {showOptions && (
-        <div className="options">
-          <button className="btn demo-btn" onClick={handleDemoClick}>
-            Demo
-          </button>
-          <button className="btn continue-btn" onClick={handleContinueClick}>
-            Continue
-          </button>
-        </div>
-      )}
-      {isDemoRunning && (
-        <div className="end-demo">
-          <button className="btn end-demo-btn" onClick={handleEndDemoClick}>
-            End Demo
-          </button>
-        </div>
-      )}
-      {isVideoVisible && (
-        <div className="avatar-card">
-          <div className="avatar-video-wrapper">
-            <video ref={myAvatarVideoEleRef} className="avatar-video"></video>
-            <canvas ref={videoCanvasRef} className="video-canvas"></canvas>
-            <audio ref={myAvatarAudioEleRef}></audio>
-          </div>
-        </div>
-      )}
+  
+      {/* Show user info form initially */}
+      {showForm && <UserInfoForm onSave={handleSaveUserInfo} />}
+  
+      {/* Main avatar UI after form submission */}
+        <>
+          {!isConnected && !isLoading && (
+            <div className="chat-bot-icon" onClick={startAvatarSession}>
+              <img src="/avatarIcon.png" alt="Chat Bot" className="chat-bot-image" />
+            </div>
+          )}
+  
+          {isLoading && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+            </div>
+          )}
+  
+          {showOptions && (
+            <div className="options">
+              <button className="btn demo-btn" onClick={handleDemoClick}>
+                Demo
+              </button>
+              <button className="btn continue-btn" onClick={handleContinueClick}>
+                Continue
+              </button>
+            </div>
+          )}
+  
+          {isDemoRunning && (
+            <div className="end-demo">
+              <button className="btn end-demo-btn" onClick={handleEndDemoClick}>
+                End Demo
+              </button>
+            </div>
+          )}
+  
+          {isVideoVisible && (
+            <div className="avatar-card">
+              <div className="avatar-video-wrapper">
+                <video ref={myAvatarVideoEleRef} className="avatar-video"></video>
+                <canvas ref={videoCanvasRef} className="video-canvas"></canvas>
+                <audio ref={myAvatarAudioEleRef}></audio>
+              </div>
+            </div>
+          )}
+        </>
     </div>
   );
 };

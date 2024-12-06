@@ -272,3 +272,18 @@
   100% { opacity: 0; }
 }
 
+
+.stop-speaking-btn {
+  padding: 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  
+}
+
+.stop-speaking-btn:hover {
+  background-color: #c82333;
+}

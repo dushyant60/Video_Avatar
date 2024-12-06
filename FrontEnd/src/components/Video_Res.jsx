@@ -5,31 +5,25 @@ import { Avatar } from "./Avatar";
 import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 import { avatarAppConfig } from "../utility/config";
 import {
-  FaCross,
   FaMicrophone,
   FaMicrophoneSlash,
   FaPaperPlane,
-  FaStopCircle,
-  FaTimes,
-  FaVideoSlash,
 } from "react-icons/fa";
 import ScreenshotDrawer from "./ScreenshotDrawer";
 import MessageDrawer from "./MessageDrawer";
-import HomePage from "./HomePage";
 
 const AppContainer = styled.div`
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: ${({ isAvatarSessionStarted }) => (isAvatarSessionStarted ? "100%" : "0%")};
+  height: ${({ isAvatarSessionStarted }) => (isAvatarSessionStarted ? "100%" : "0%")};
   z-index: 1000; 
-  background: rgba(0, 0, 0, 0.5); // Optional: Add a semi-transparent background
-  overflow: hidden;
-  padding: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: ${({ isAvatarSessionStarted }) => (isAvatarSessionStarted ? "20px" : "0px")};
 
   @media (max-width: 768px) {
-    padding: 5px;
+    padding: ${({ isAvatarSessionStarted }) => (isAvatarSessionStarted ? "5px" : "0px")};
   }
 `;
 
@@ -230,6 +224,24 @@ const StopButton = styled.button`
   }
 `;
 
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 10px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 1001;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #c82333;
+  }
+`;
+
 const Video_Res = () => {
   const [videoSrc, setVideoSrc] = useState(
     "https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/2021 Nissan Magnite.mp4"
@@ -238,7 +250,6 @@ const Video_Res = () => {
   const [status, setStatus] = useState("");
   const [screenshots, setScreenshots] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [recognizedText, setRecognizedText] = useState("");
   const [isMicrophoneActive, setIsMicrophoneActive] = useState(false);
   const [showHiddenContent, setShowHiddenContent] = useState(false);
   const [isDemoRunning, setIsDemoRunning] = useState(false);
@@ -251,12 +262,17 @@ const Video_Res = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMessageDrawerOpen, setIsMessageDrawerOpen] = useState(false);
 
-  const [isAppContainerVisible, setIsAppContainerVisible] = useState(false);
+  const [isAvatarSessionStarted, setAvatarSessionStarted] = useState(false);
 
+  useEffect(() => {
+    if (isAvatarSessionStarted) {
+      document.body.style.overflow = "hidden"; // Disable scrolling
+      window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll to top smoothly
+    } else {
+      document.body.style.overflow = "auto"; // Enable scrolling
+    }
+  }, [isAvatarSessionStarted]);
   
-  const handleChatBotClick = () => {
-    setIsAppContainerVisible(true);
-  };
 
   const toggleMessageDrawer = () => {
     setIsMessageDrawerOpen(!isMessageDrawerOpen);
@@ -372,24 +388,35 @@ const Video_Res = () => {
         speechConfig,
         audioConfig
       );
-
+  
       speechRecognizerRef.current.recognized = (s, e) => {
         if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
           const recognizedText = e.result.text.trim();
           if (recognizedText) {
             setUserPrompt(recognizedText);
             handleSend(recognizedText);
+  
+            // Auto stop microphone when a phrase is recognized
+            speechRecognizerRef.current.stopContinuousRecognitionAsync(
+              () => {
+                setIsMicrophoneActive(false);
+              },
+              (err) => {
+                console.error("Error stopping recognition:", err);
+                setIsMicrophoneActive(false);
+              }
+            );
           }
         }
       };
-
+  
       speechRecognizerRef.current.canceled = (s, e) => {
         if (e.reason === SpeechSDK.CancellationReason.Error) {
           console.error(`Error: ${e.errorDetails}`);
         }
         setIsMicrophoneActive(false);
       };
-
+  
       speechRecognizerRef.current.startContinuousRecognitionAsync(
         () => {
           setIsMicrophoneActive(true);
@@ -427,8 +454,30 @@ const Video_Res = () => {
     }
   }, [isDemoRunning]);
 
+  const handleQuit = () => {
+    // Reset all states
+    setAvatarSessionStarted(false);
+    setMessages([]);
+    setUserPrompt("");
+    setVideoSrc(
+      "https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/2021 Nissan Magnite.mp4"
+    );
+    setScreenshots([]);
+    setStatus("");
+    setIsDemoRunning(false);
+    setShowHiddenContent(false);
+  
+    // Clean up microphone if active
+    if (speechRecognizerRef.current) {
+      speechRecognizerRef.current.stopContinuousRecognitionAsync();
+      speechRecognizerRef.current = null;
+    }
+  };
+  
+
   return (
-    <AppContainer>
+    <AppContainer  isAvatarSessionStarted={isAvatarSessionStarted}>
+      {/* <CloseButton onClick={handleQuit}>Close</CloseButton> */}
       <VideoContainer>
         {isDemoRunning && (
           <DemoVideoContainer>
@@ -477,12 +526,12 @@ const Video_Res = () => {
               </Message>
             ))}
           </MessageList>
-
           <Avatar
             externalMessage={status}
             onDemoComplete={handleDemoComplete}
             onDemoStart={handleDemoStart}
             onDemoEnd={handleDemoEnd}
+            onSessionStart={() => setAvatarSessionStarted(true)} onSessionEnd={() => setAvatarSessionStarted(false)}
           />
         </AvatarContainer>
       </VideoContainer>

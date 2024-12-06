@@ -110,7 +110,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      <Avatar/>
+      {/* <Avatar/> */}
 <Video_Res/>
 
     </div>
