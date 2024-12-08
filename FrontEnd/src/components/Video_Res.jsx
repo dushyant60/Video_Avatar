@@ -458,8 +458,8 @@ const App = () => {
       <VideoContainer>
         {isDemoRunning && (
           <DemoVideoContainer>
-            <video ref={demoVideoRef} autoPlay muted style={{ borderRadius: "20px", width: "100%", height: "calc(100vh - 100px)", objectFit: "cover" }}>
-              <source src="https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/CBRE_Video.mp4" type="video/mp4" />
+            <video ref={demoVideoRef} autoPlay muted preload="auto" style={{ borderRadius: "20px", width: "100%", height: "calc(100vh - 100px)", objectFit: "cover" }}>
+              <source src={videoSrc} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </DemoVideoContainer>
