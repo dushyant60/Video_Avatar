@@ -256,6 +256,7 @@ const App = () => {
   const [isDemoRunning, setIsDemoRunning] = useState(false);
   const [conversationId, setConversationId] = useState(uuidv4());
   const videoRef = useRef(null);
+  const [prefetchedVideo, setPrefetchedVideo] = useState(null); // For storing the preloaded Blob URL
   const demoVideoRef = useRef(null);
   const speechRecognizerRef = useRef(null);
   const canvas = document.createElement('canvas');
@@ -267,13 +268,10 @@ const App = () => {
     setIsMessageDrawerOpen(!isMessageDrawerOpen);
   };
 
-
   const toggleDrawer = () => {
     setIsDrawerOpen(!isDrawerOpen);
   };
 
-
- 
   const handleVideoUpload = event => {
     const file = event.target.files[0];
     if (file) {
@@ -342,7 +340,7 @@ const App = () => {
     setScreenshots([...screenshots, capturedFrame]);
  
     try {
-      const response = await fetch('https://web-dpxjzr3ghqbg4-docker-dev-version.azurewebsites.net/api/conversation', {
+      const response = await fetch('https://12fe-4-247-150-104.ngrok-free.app/api/conversation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -428,17 +426,38 @@ const App = () => {
     }
   };
  
+  // Prefetch the video when the component mounts
+  useEffect(() => {
+    const prefetchVideo = async () => {
+      const videoUrl = 'https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/CBRE_Video.mp4';
+      try {
+        const response = await fetch(videoUrl); // Fetch the video
+        const videoBlob = await response.blob(); // Convert it to a Blob
+        const videoBlobUrl = URL.createObjectURL(videoBlob); // Create a local Blob URL
+        setPrefetchedVideo(videoBlobUrl); // Store the Blob URL
+      } catch (error) {
+        console.error('Failed to prefetch the video:', error);
+      }
+    };
+
+    prefetchVideo();
+  }, []);
+
   const handleDemoComplete = () => {
     setShowHiddenContent(true);
   };
  
+  // Handle the demo start with prefetched video
   const handleDemoStart = () => {
-    setIsDemoRunning(true);
-    if (demoVideoRef.current) {
-      demoVideoRef.current.play();
+    if (prefetchedVideo) {
+      setVideoSrc(prefetchedVideo); // Use the prefetched Blob URL
+      setIsDemoRunning(true);
+      if (demoVideoRef.current) {
+        demoVideoRef.current.play();
+      }
     }
   };
- 
+
   const handleDemoEnd = () => {
     if (demoVideoRef.current) {
       demoVideoRef.current.pause();
