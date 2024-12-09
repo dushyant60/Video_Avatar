@@ -255,6 +255,7 @@ const Video_Res = () => {
   const [isDemoRunning, setIsDemoRunning] = useState(false);
   const [conversationId, setConversationId] = useState(uuidv4());
   const videoRef = useRef(null);
+  const [prefetchedVideo, setPrefetchedVideo] = useState(null); // For storing the preloaded Blob URL
   const demoVideoRef = useRef(null);
   const speechRecognizerRef = useRef(null);
   const canvas = document.createElement("canvas");
@@ -272,7 +273,17 @@ const Video_Res = () => {
       document.body.style.overflow = "auto"; // Enable scrolling
     }
   }, [isAvatarSessionStarted]);
-  
+
+  const handleSaveUserInfo = (userInfo) => {
+    // Update conversationId with user name and mobile
+    const updatedConversationId = `${conversationId}+${userInfo.name}+${userInfo.mobile}`;
+    setConversationId(updatedConversationId);
+    console.log("Updated Conversation ID:", updatedConversationId);
+  };
+
+  useEffect(() => {
+    // Handle session start or other side effects
+  }, [conversationId]);
 
   const toggleMessageDrawer = () => {
     setIsMessageDrawerOpen(!isMessageDrawerOpen);
@@ -433,6 +444,23 @@ const Video_Res = () => {
     setShowHiddenContent(true);
   };
 
+  // Prefetch the video when the component mounts
+  useEffect(() => {
+    const prefetchVideo = async () => {
+      const videoUrl = 'https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/CBRE_Video.mp4';
+      try {
+        const response = await fetch(videoUrl); // Fetch the video
+        const videoBlob = await response.blob(); // Convert it to a Blob
+        const videoBlobUrl = URL.createObjectURL(videoBlob); // Create a local Blob URL
+        setPrefetchedVideo(videoBlobUrl); // Store the Blob URL
+      } catch (error) {
+        console.error('Failed to prefetch the video:', error);
+      }
+    };
+
+    prefetchVideo();
+  }, []);
+
   const handleDemoStart = () => {
     setIsDemoRunning(true);
     if (demoVideoRef.current) {
@@ -531,7 +559,9 @@ const Video_Res = () => {
             onDemoComplete={handleDemoComplete}
             onDemoStart={handleDemoStart}
             onDemoEnd={handleDemoEnd}
-            onSessionStart={() => setAvatarSessionStarted(true)} onSessionEnd={() => setAvatarSessionStarted(false)}
+            onSessionStart={() => setAvatarSessionStarted(true)} 
+            onSessionEnd={() => setAvatarSessionStarted(false)}
+            onSaveUserInfo={handleSaveUserInfo}
           />
         </AvatarContainer>
       </VideoContainer>
