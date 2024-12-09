@@ -7,18 +7,16 @@ import {
 } from "../utility/Utility";
 import { avatarAppConfig } from "../utility/config";
 import { useState, useRef, useEffect } from "react";
-// import { FaPlug, FaTimes, FaStop, FaCommentDots } from "react-icons/fa";
-import {startSession} from "../utility/sessionutils";
+import { startSession } from "../utility/sessionutils";
 import { FaStop } from "react-icons/fa";
 import { UserInfoForm } from "./UserInfoForm";
-
 
 export const Avatar = ({
   externalMessage,
   onDemoComplete,
   onDemoStart,
   onDemoEnd,
-  onSessionStart, 
+  onSessionStart,
   onSessionEnd,
 }) => {
   const [avatarSynthesizer, setAvatarSynthesizer] = useState(null);
@@ -27,12 +25,11 @@ export const Avatar = ({
   const [isConnected, setIsConnected] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [isDemoRunning, setIsDemoRunning] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // New loading state
-  const [showTooltip, setShowTooltip] = useState(true); // New tooltip state
+  const [isLoading, setIsLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(true);
   const [isVideoVisible, setIsVideoVisible] = useState(false);
-
-  const [showForm, setShowForm] = useState(true); // Show form initially
-  const [userInfo, setUserInfo] = useState(null); // Store user data
+  const [showForm, setShowForm] = useState(true);
+  const [userInfo, setUserInfo] = useState(null);
 
   const myAvatarVideoEleRef = useRef();
   const myAvatarAudioEleRef = useRef();
@@ -40,9 +37,30 @@ export const Avatar = ({
 
   const handleSaveUserInfo = (data) => {
     setUserInfo(data);
-    setShowForm(false); // Hide the form
-    onSessionStart(); // Proceed with session start
-    console.log("User Info Saved:", data); // Optionally send to server
+    setShowForm(false);
+    setShowOptions(true); // Show options after form submission
+    onSessionStart();
+    console.log("User Info Saved:", data);
+  
+    if (avatarSynthesizer) {
+      const message = "You can ask for a consolidated demo of the Nissan Magnite, or you can ask me anything after continuing.";
+      avatarSynthesizer
+        .speakTextAsync(message)
+        .then((result) => {
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+            console.log("Options message synthesized.");
+          } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
+            const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+            if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
+              console.error(cancellationDetails.errorDetails);
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error synthesizing options message:", error);
+          avatarSynthesizer.close();
+        });
+    }
   };
 
   const {
@@ -53,15 +71,10 @@ export const Avatar = ({
     azureSpeechServiceRegion,
   } = avatarAppConfig;
 
-  const introductionMessage =
-    "Hello! I am your AI car assistant. Would you like a demo of the car or do you have any questions about it?";
-  const demoMessage =
-    "Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.";
-  const continuationMessage =
-    "You can ask me anything regarding Nissan Magnite.";
+  const introductionMessage = "Hello! I am your virtual assistant. Please fill in your details. To Continue for Demo!";
+  const continuationMessage = "You can ask me anything regarding Nissan Magnite.";
 
   useEffect(() => {
-    // Hide tooltip after 10 seconds
     const timer = setTimeout(() => setShowTooltip(false), 5000);
     return () => clearTimeout(timer);
   }, []);
@@ -146,32 +159,25 @@ export const Avatar = ({
     setIsConnected(false);
     setShowOptions(false);
     setIsDemoRunning(false);
-    // Add any other state resets here if needed
   };
-
 
   const startAvatarSession = () => {
     startSession(setIsLoading, setIsConnected, setAvatarSynthesizer, handleOnTrack);
     setIsVideoVisible(true);
     onSessionStart();
-  }
+  };
+
   const introduceAvatar = () => {
     if (avatarSynthesizer) {
       avatarSynthesizer
         .speakTextAsync(introductionMessage)
         .then((result) => {
-          if (
-            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
-          ) {
-            setShowOptions(true);
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+            // setShowOptions(true);
           } else {
             if (result.reason === SpeechSDK.ResultReason.Canceled) {
-              const cancellationDetails =
-                SpeechSDK.CancellationDetails.fromResult(result);
-              if (
-                cancellationDetails.reason ===
-                SpeechSDK.CancellationReason.Error
-              ) {
+              const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+              if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
                 console.error(cancellationDetails.errorDetails);
               }
             }
@@ -205,18 +211,12 @@ export const Avatar = ({
       avatarSynthesizer
         .speakTextAsync(cleanedResponse)
         .then((result) => {
-          if (
-            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
-          ) {
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
             console.log("Speech and avatar synthesized to video stream.");
           } else {
             if (result.reason === SpeechSDK.ResultReason.Canceled) {
-              const cancellationDetails =
-                SpeechSDK.CancellationDetails.fromResult(result);
-              if (
-                cancellationDetails.reason ===
-                SpeechSDK.CancellationReason.Error
-              ) {
+              const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+              if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
                 console.error(cancellationDetails.errorDetails);
               }
             }
@@ -233,23 +233,17 @@ export const Avatar = ({
     setShowOptions(false);
     setIsDemoRunning(true);
     document.querySelector(".avatar-card").classList.add("shrink");
-    onDemoStart(); // Trigger demo start handler
+    onDemoStart();
     if (avatarSynthesizer) {
       avatarSynthesizer
-        .speakTextAsync(demoMessage)
+        .speakTextAsync(`Hello ${userInfo.name}!, Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.!`)
         .then((result) => {
-          if (
-            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
-          ) {
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
             console.log("Demo message synthesized to video stream.");
           } else {
             if (result.reason === SpeechSDK.ResultReason.Canceled) {
-              const cancellationDetails =
-                SpeechSDK.CancellationDetails.fromResult(result);
-              if (
-                cancellationDetails.reason ===
-                SpeechSDK.CancellationReason.Error
-              ) {
+              const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+              if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
                 console.error(cancellationDetails.errorDetails);
               }
             }
@@ -265,7 +259,7 @@ export const Avatar = ({
   const handleEndDemoClick = () => {
     setIsDemoRunning(false);
     document.querySelector(".avatar-card").classList.add("shrink");
-    onDemoEnd(); // Trigger demo end handler
+    onDemoEnd();
     onDemoComplete();
     if (avatarSynthesizer) {
       avatarSynthesizer
@@ -275,19 +269,12 @@ export const Avatar = ({
             avatarSynthesizer
               .speakTextAsync(continuationMessage)
               .then((result) => {
-                if (
-                  result.reason ===
-                  SpeechSDK.ResultReason.SynthesizingAudioCompleted
-                ) {
+                if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
                   console.log("Continuation message synthesized.");
                 } else {
                   if (result.reason === SpeechSDK.ResultReason.Canceled) {
-                    const cancellationDetails =
-                      SpeechSDK.CancellationDetails.fromResult(result);
-                    if (
-                      cancellationDetails.reason ===
-                      SpeechSDK.CancellationReason.Error
-                    ) {
+                    const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+                    if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
                       console.error(cancellationDetails.errorDetails);
                     }
                   }
@@ -309,23 +296,17 @@ export const Avatar = ({
     setShowOptions(false);
     setIsDemoRunning(false);
     document.querySelector(".avatar-card").classList.add("shrink");
-    onDemoComplete(); // Ensure the video upload is shown first
+    onDemoComplete();
     if (avatarSynthesizer) {
       avatarSynthesizer
         .speakTextAsync(continuationMessage)
         .then((result) => {
-          if (
-            result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted
-          ) {
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
             console.log("Continuation message synthesized.");
           } else {
             if (result.reason === SpeechSDK.ResultReason.Canceled) {
-              const cancellationDetails =
-                SpeechSDK.CancellationDetails.fromResult(result);
-              if (
-                cancellationDetails.reason ===
-                SpeechSDK.CancellationReason.Error
-              ) {
+              const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+              if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
                 console.error(cancellationDetails.errorDetails);
               }
             }
@@ -345,53 +326,51 @@ export const Avatar = ({
           Let's explore Nissan cars with a new avatar experience!
         </div>
       )}
-  
-      {/* Show user info form initially */}
+
       {showForm && <UserInfoForm onSave={handleSaveUserInfo} />}
-  
-      {/* Main avatar UI after form submission */}
-        <>
-          {!isConnected && !isLoading && (
-            <div className="chat-bot-icon" onClick={startAvatarSession}>
-              <img src="/avatarIcon.png" alt="Chat Bot" className="chat-bot-image" />
+
+      <>
+        {!isConnected && !isLoading && (
+          <div className="chat-bot-icon" onClick={startAvatarSession}>
+            <img src="/avatarIcon.png" alt="Chat Bot" className="chat-bot-image" />
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner"></div>
+          </div>
+        )}
+
+        {showOptions && (
+          <div className="options">
+            <button className="btn demo-btn" onClick={handleDemoClick}>
+              Demo
+            </button>
+            <button className="btn continue-btn" onClick={handleContinueClick}>
+              Continue
+            </button>
+          </div>
+        )}
+
+        {isDemoRunning && (
+          <div className="end-demo">
+            <button className="btn end-demo-btn" onClick={handleEndDemoClick}>
+              End Demo
+            </button>
+          </div>
+        )}
+
+        {isVideoVisible && (
+          <div className="avatar-card">
+            <div className="avatar-video-wrapper">
+              <video ref={myAvatarVideoEleRef} className="avatar-video"></video>
+              <canvas ref={videoCanvasRef} className="video-canvas"></canvas>
+              <audio ref={myAvatarAudioEleRef}></audio>
             </div>
-          )}
-  
-          {isLoading && (
-            <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-            </div>
-          )}
-  
-          {showOptions && (
-            <div className="options">
-              <button className="btn demo-btn" onClick={handleDemoClick}>
-                Demo
-              </button>
-              <button className="btn continue-btn" onClick={handleContinueClick}>
-                Continue
-              </button>
-            </div>
-          )}
-  
-          {isDemoRunning && (
-            <div className="end-demo">
-              <button className="btn end-demo-btn" onClick={handleEndDemoClick}>
-                End Demo
-              </button>
-            </div>
-          )}
-  
-          {isVideoVisible && (
-            <div className="avatar-card">
-              <div className="avatar-video-wrapper">
-                <video ref={myAvatarVideoEleRef} className="avatar-video"></video>
-                <canvas ref={videoCanvasRef} className="video-canvas"></canvas>
-                <audio ref={myAvatarAudioEleRef}></audio>
-              </div>
-            </div>
-          )}
-        </>
+          </div>
+        )}
+      </>
     </div>
   );
 };
