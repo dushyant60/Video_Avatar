@@ -340,7 +340,7 @@ const App = () => {
     setScreenshots([...screenshots, capturedFrame]);
  
     try {
-      const response = await fetch('https://b08c-4-247-150-104.ngrok-free.app/api/conversation', {
+      const response = await fetch('https://web-dpxjzr3ghqbg4-docker-dev-version.azurewebsites.net/api/conversation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
