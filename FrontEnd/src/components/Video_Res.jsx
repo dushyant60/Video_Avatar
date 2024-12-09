@@ -340,7 +340,7 @@ const App = () => {
     setScreenshots([...screenshots, capturedFrame]);
  
     try {
-      const response = await fetch('https://12fe-4-247-150-104.ngrok-free.app/api/conversation', {
+      const response = await fetch('https://b08c-4-247-150-104.ngrok-free.app/api/conversation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -384,7 +384,7 @@ const App = () => {
             setIsMicrophoneActive(false);
           },
           (err) => {
-            console.error('Error stopping recognition:', err);
+            console.error("Error stopping recognition:", err);
             setIsMicrophoneActive(false);
           }
         );
@@ -395,31 +395,45 @@ const App = () => {
         avatarAppConfig.azureSpeechServiceRegion
       );
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-      speechRecognizerRef.current = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-  
+      speechRecognizerRef.current = new SpeechSDK.SpeechRecognizer(
+        speechConfig,
+        audioConfig
+      );
+ 
       speechRecognizerRef.current.recognized = (s, e) => {
         if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
           const recognizedText = e.result.text.trim();
           if (recognizedText) {
             setUserPrompt(recognizedText);
             handleSend(recognizedText);
+ 
+            // Auto stop microphone when a phrase is recognized
+            speechRecognizerRef.current.stopContinuousRecognitionAsync(
+              () => {
+                setIsMicrophoneActive(false);
+              },
+              (err) => {
+                console.error("Error stopping recognition:", err);
+                setIsMicrophoneActive(false);
+              }
+            );
           }
         }
       };
-  
+ 
       speechRecognizerRef.current.canceled = (s, e) => {
         if (e.reason === SpeechSDK.CancellationReason.Error) {
           console.error(`Error: ${e.errorDetails}`);
         }
         setIsMicrophoneActive(false);
       };
-  
+ 
       speechRecognizerRef.current.startContinuousRecognitionAsync(
         () => {
           setIsMicrophoneActive(true);
         },
         (err) => {
-          console.error('Error starting recognition:', err);
+          console.error("Error starting recognition:", err);
           setIsMicrophoneActive(false);
         }
       );
