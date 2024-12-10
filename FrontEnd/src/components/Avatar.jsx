@@ -6,20 +6,24 @@ import {
   makeBackgroundTransparent,
 } from "../utility/Utility";
 import { avatarAppConfig } from "../utility/config";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { startSession } from "../utility/sessionutils";
 import { FaStop } from "react-icons/fa";
 import { UserInfoForm } from "./UserInfoForm";
 
-export const Avatar = ({
-  externalMessage,
-  onDemoComplete,
-  onDemoStart,
-  onDemoEnd,
-  onSessionStart,
-  onSaveUserInfo,
-  onSessionEnd,
-}) => {
+export const Avatar = forwardRef(
+  (
+    {
+      externalMessage,
+      onDemoComplete,
+      onDemoStart,
+      onDemoEnd,
+      onSessionStart,
+      onSaveUserInfo,
+      onSessionEnd,
+    },
+    ref // The ref passed from the parent component
+  ) => {
   const [avatarSynthesizer, setAvatarSynthesizer] = useState(null);
   const [recognizedText, setRecognizedText] = useState("");
   const [responseText, setResponseText] = useState("");
@@ -37,6 +41,7 @@ export const Avatar = ({
   const myAvatarVideoEleRef = useRef();
   const myAvatarAudioEleRef = useRef();
   const videoCanvasRef = useRef(null);
+
   
   useEffect(() => {
     if (isConnected && !isLoading) {
@@ -145,16 +150,25 @@ export const Avatar = ({
     }
   };
 
-  const stopSpeaking = () => {
+   // Ref functions
+   const stopSpeaking = () => {
     if (avatarSynthesizer) {
       avatarSynthesizer
         .stopSpeakingAsync()
         .then(() => {
-          console.log("Stop speaking request sent.");
+          console.log("Stopped speaking.");
         })
         .catch((error) => console.error(error));
     }
   };
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    stopSpeaking,
+    stopSession,
+  }));
+  
+
 
   const stopSession = () => {
     if (avatarSynthesizer) {
@@ -391,4 +405,5 @@ export const Avatar = ({
       </>
     </div>
   );
-};
+}
+);

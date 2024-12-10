@@ -8,6 +8,7 @@ import {
   FaMicrophone,
   FaMicrophoneSlash,
   FaPaperPlane,
+  FaVolumeMute,
 } from "react-icons/fa";
 import ScreenshotDrawer from "./ScreenshotDrawer";
 import MessageDrawer from "./MessageDrawer";
@@ -150,6 +151,15 @@ const SendButton = styled.button`
   }
 `;
 
+const StopSpeakingButton = styled(SendButton)`
+  background-color: #dc3545; /* Red color */
+  
+  &:hover {
+    background-color: #c82333; /* Darker red on hover */
+  }
+`;
+
+
 const AvatarContainer = styled.div`
   z-index: 10;
   position: absolute;
@@ -264,6 +274,15 @@ const Video_Res = () => {
   const [isMessageDrawerOpen, setIsMessageDrawerOpen] = useState(false);
 
   const [isAvatarSessionStarted, setAvatarSessionStarted] = useState(false);
+  const avatarRef = useRef(); //Stop Spaking Avatar
+
+
+  //Stop Spaking Avatar
+  const handleStopSpeaking = () => {
+    if (avatarRef.current) {
+      avatarRef.current.stopSpeaking();
+    }
+  };
 
   useEffect(() => {
     if (isAvatarSessionStarted) {
@@ -555,6 +574,7 @@ const Video_Res = () => {
             ))}
           </MessageList>
           <Avatar
+            ref={avatarRef} 
             externalMessage={status}
             onDemoComplete={handleDemoComplete}
             onDemoStart={handleDemoStart}
@@ -581,6 +601,9 @@ const Video_Res = () => {
           <SendButton onClick={handleMicrophoneClick}>
             {isMicrophoneActive ? <FaMicrophoneSlash /> : <FaMicrophone />}
           </SendButton>
+          <StopSpeakingButton onClick={handleStopSpeaking}>
+        <FaVolumeMute />
+        </StopSpeakingButton>
         </ChatContainer>
         <ScreenshotDrawer
           screenshots={screenshots}
