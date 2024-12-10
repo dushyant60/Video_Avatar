@@ -5,7 +5,7 @@ export const avatarAppConfig = {
   // cogSvcRegion : "swedencentral",
   // cogSvcSubKey :"6QBT32PnYYegfZnWOZqecDNIDMb9wPj1ikUmPCbwl6miY2iFbxIpJQQJ99AKACfhMk5XJ3w3AAAYACOGlITd",
   // voiceName : "en-US-AlloyMultilingualNeural",
-  avatarCharacter : "Max",
+  avatarCharacter : "Jeff",
   avatarStyle : "business",
   avatarBackgroundColor : "#00FF00FF",
   // iceUrl : "stun:relay.communication.microsoft.com:3478",

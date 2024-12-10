@@ -93,9 +93,10 @@
   gap: 5px;
   cursor: pointer;
   padding: 5px 10px;
-  border: none;
+  /* border: none; */
   border-radius: 5px;
   color: white !important;
+  border: 1px solid white !important;
 }
 
 .connect-btn {
@@ -140,7 +141,7 @@
 .options {
   position: fixed;
   top: 30px;
-  right: 60px;
+  left: 60px;
   display: flex;
   gap: 10px;
   z-index: 100;
@@ -179,8 +180,8 @@
 
 .end-demo{
   position: fixed;
-  top: 50px;
-  right: 50px;
+  top: 60px;
+  left: 50px;
   display: flex;
   gap: 10px;
   z-index: 9999;
@@ -188,7 +189,7 @@
 @media(max-width: 768px){
   .end-demo{
     top:50px;
-    right: 40%;
+    left: 40%;
   }
 }
 

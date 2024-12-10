@@ -63,7 +63,8 @@ export const Avatar = forwardRef(
     onSessionStart();
     console.log("User Info Saved:", data);
   
-    const username = data.name || "User"; // Default to "User" if username is not provided
+    // Extract first name from the full name (assuming 'data.name' contains the full name)
+    const username = data.name ? data.name.split(' ')[0] : "User"; // Default to "User" if name is not provided
   
     if (avatarSynthesizer) {
       const message = `Hello ${username}!, You can ask for a consolidated demo of the Nissan Magnite, or you can ask me anything after continuing.`;
@@ -169,7 +170,6 @@ export const Avatar = forwardRef(
   }));
   
 
-
   const stopSession = () => {
     if (avatarSynthesizer) {
       avatarSynthesizer
@@ -183,7 +183,7 @@ export const Avatar = forwardRef(
       resetState();
     }
   };
-
+  
   const resetState = () => {
     setAvatarSynthesizer(null);
     setRecognizedText("");
@@ -191,7 +191,13 @@ export const Avatar = forwardRef(
     setIsConnected(false);
     setShowOptions(false);
     setIsDemoRunning(false);
-  };
+    setIsLoading(false);
+    setShowForm(true); // Ensure form is visible again
+    setShowFormDelay(false); // Reset form delay
+    setUserInfo(null); // Clear user info
+    setIsVideoVisible(false); // Hide video and canvas
+    // Reset any other states that might affect the initial UI
+  };;
 
   const startAvatarSession = () => {
     startSession(setIsLoading, setIsConnected, setAvatarSynthesizer, handleOnTrack);
@@ -266,9 +272,13 @@ export const Avatar = forwardRef(
     setIsDemoRunning(true);
     document.querySelector(".avatar-card").classList.add("shrink");
     onDemoStart();
+
+    // Extract the first name from userInfo.name
+  const username = userInfo.name ? userInfo.name.split(' ')[0] : "User"; // Default to "User" if name is not provided
+
     if (avatarSynthesizer) {
       avatarSynthesizer
-        .speakTextAsync(`Hii ${userInfo.name}!, Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.!`)
+        .speakTextAsync(`Hii ${username}!, Welcome to the Nissan Magnite experience! Now, if you’re looking for a compact SUV that outshines its rivals, you’re in the right place. First off, the design—bold, sporty, and unmistakable. The LED headlights and signature V-motion grille give it a commanding look that’s pure Nissan. And unlike others in this range, the Magnite’s compact build is perfect for the city, while still being spacious for weekend getaways. Inside, you’ll find high-quality materials, a digital instrument cluster, and a best-in-class 8-inch touchscreen with Android Auto and Apple CarPlay. Nissan has prioritized your comfort with generous legroom and headroom, ambient lighting, and seating for five. It’s premium all the way.When it comes to safety, the Magnite is in a league of its own. ABS, EBD, multiple airbags, and the option of a 360-degree surround-view camera give you unmatched peace of mind. Other SUVs at this price? They can’t quite match that.And under the hood, it’s all about power and efficiency. The 1.0-liter turbocharged engine gives you the thrill you want with the fuel economy you need. It’s designed for pure driving pleasure, without compromise. Simply put, the Nissan Magnite offers what other SUVs in this range can’t—a superior blend of style, comfort, tech, and power. It’s not just an SUV; it’s a statement.!`)
         .then((result) => {
           if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
             console.log("Demo message synthesized to video stream.");

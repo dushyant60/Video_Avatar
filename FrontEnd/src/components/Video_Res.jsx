@@ -10,6 +10,7 @@ import {
   FaPaperPlane,
   FaVolumeMute,
 } from "react-icons/fa";
+import { IoClose } from "react-icons/io5";
 import ScreenshotDrawer from "./ScreenshotDrawer";
 import MessageDrawer from "./MessageDrawer";
 
@@ -236,16 +237,19 @@ const StopButton = styled.button`
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 10px;
+  top: 50px;
+  right: 50px;
+  // padding: 5px;
+  // heigth: 100%;
+  // width:100%;
   background-color: #dc3545;
   color: white;
-  border: none;
-  border-radius: 5px;
+  border: 1px solid white;
+  border-radius: 50%;
   cursor: pointer;
   z-index: 1001;
   transition: background-color 0.3s ease;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 
   &:hover {
     background-color: #c82333;
@@ -272,6 +276,7 @@ const Video_Res = () => {
   const ctx = canvas.getContext("2d");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMessageDrawerOpen, setIsMessageDrawerOpen] = useState(false);
+  const [isSessionStopped, setIsSessionStopped] = useState(false);
 
   const [isAvatarSessionStarted, setAvatarSessionStarted] = useState(false);
   const avatarRef = useRef(); //Stop Spaking Avatar
@@ -283,6 +288,55 @@ const Video_Res = () => {
       avatarRef.current.stopSpeaking();
     }
   };
+
+  const handleStopSession = () => {
+    // Stop video playback
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0; // Reset playback to the start
+    }
+  
+    // Stop avatar session
+    if (avatarRef.current) {
+      avatarRef.current.stopSession();
+    }
+  
+    // Stop microphone/speech recognition if active
+    if (speechRecognizerRef.current) {
+      speechRecognizerRef.current.stopContinuousRecognitionAsync(
+        () => {
+          console.log("Speech recognition stopped.");
+        },
+        (err) => {
+          console.error("Error stopping speech recognition:", err);
+        }
+      );
+      speechRecognizerRef.current = null; // Clean up reference
+    }
+  
+    // Reset demo video
+    if (demoVideoRef.current) {
+      demoVideoRef.current.pause();
+      demoVideoRef.current.currentTime = 0; // Reset playback
+    }
+  
+    // Reset application state
+    setIsSessionStopped(true);
+    setAvatarSessionStarted(false);
+    setIsDemoRunning(false);
+    setShowHiddenContent(false);
+    setUserPrompt("");
+    setMessages([]);
+    setScreenshots([]);
+    setStatus("");
+    setConversationId(uuidv4()); // Reset conversation ID
+
+  
+    // Optionally restore scrolling if locked
+    document.body.style.overflow = "auto";
+
+  };
+
 
   useEffect(() => {
     if (isAvatarSessionStarted) {
@@ -524,7 +578,7 @@ const Video_Res = () => {
 
   return (
     <AppContainer  isAvatarSessionStarted={isAvatarSessionStarted}>
-      {/* <CloseButton onClick={handleQuit}>Close</CloseButton> */}
+      <CloseButton onClick={handleStopSession}><IoClose style={{height:"26px", width:"26px"}}/></CloseButton>
       <VideoContainer>
         {isDemoRunning && (
           <DemoVideoContainer>
