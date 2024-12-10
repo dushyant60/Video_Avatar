@@ -31,8 +31,6 @@ export const Avatar = ({
   const [isVideoVisible, setIsVideoVisible] = useState(false);
   const [showForm, setShowForm] = useState(true);
   const [showFormDelay, setShowFormDelay] = useState(false);
-  const [formVisibleClass, setFormVisibleClass] = useState("form-hidden");
-
   const [userInfo, setUserInfo] = useState(null);
 
 
