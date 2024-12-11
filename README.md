@@ -1,35 +1,44 @@
-# Azure Avatar Demo
+# TTS AVATAR
 
-Welcome to the Azure Avatar Demo! This project showcases the integration of Azure AI's Text-to-Speech Avatar feature into a ReactJS application. With this application, you can bring lifelike synthetic talking avatars to your projects.
+Welcome to the **TTS Avatar**! This project showcases the integration of Azure AI's Text-to-Speech Avatar feature into a ReactJS application. With this application, you can bring lifelike synthetic talking avatars to your projects effortlessly.
 
-## Demo
+---
 
-[Watch the Demo Video](https://drive.google.com/file/d/13liFTedLCbXuRmWskauEBDct70rtL4PL/view?usp=sharing)
+## 🌟 **Demo**
 
-Click the link above to watch a demo of the Azure Avatar in action!
+[🎥 Watch the Demo Video](https://drive.google.com/file/d/13liFTedLCbXuRmWskauEBDct70rtL4PL/view?usp=sharing)
 
-## Home Screen
+Explore the Azure Avatar in action through our demo video! Witness how synthetic avatars come alive and communicate seamlessly.
+
+---
+
+## 🖼️ **Home Screen**
 
 ![Main Screenshot](./FrontEnd/public/Avatar_SS.png)
 
-*Add a screenshot of your application here to give users a visual overview of what to expect.*
+> _*Add a screenshot of your application here to give users a visual overview of what to expect.*_
 
-## NOTICE
+---
 
-Microsoft is now retiring Azure TURN services. Azure TTS avatar was using Azure TURN services for communication. I have added a script to install coturn on an Ubuntu instance. Execute `installCoturn.sh` to set up your own TURN server.
+## ⚠️ **Notice**
 
-Refer to this medium link for more details: [Azure Avatar TTS Update](https://raokarthik83.medium.com/azure-avatar-tts-update-migrating-from-azure-turn-to-coturn-14b6ac86d60c)
+Microsoft is retiring Azure TURN services, which are used by the Azure TTS Avatar for communication. To ensure continuity, this project includes a script to set up your own TURN server:
 
-## Getting Started
+- Execute the `installCoturn.sh` script on an Ubuntu instance to configure your TURN server.
+- For detailed guidance, refer to this article: [Azure Avatar TTS Update](https://raokarthik83.medium.com/azure-avatar-tts-update-migrating-from-azure-turn-to-coturn-14b6ac86d60c).
+
+---
+
+## 🚀 **Getting Started**
 
 Follow these steps to set up and run the application locally:
 
-### Prerequisites
+### 📋 **Prerequisites**
 
-- Node.js and npm installed on your machine.
+- Install **Node.js** and **npm** on your machine.
 - An Azure account with access to the necessary services.
 
-### Installation
+### 🛠️ **Installation**
 
 1. **Clone the Repository:**
 
@@ -46,7 +55,7 @@ Follow these steps to set up and run the application locally:
 
 3. **Configure Environment Variables:**
 
-   Create a `.env` file in the root of your project and add the following environment variables:
+   Create a `.env` file in the root directory and add the following:
 
    ```plaintext
    REACT_APP_COG_SVC_REGION=your-region
@@ -65,25 +74,32 @@ Follow these steps to set up and run the application locally:
    npm start
    ```
 
-   The application will be accessible at [http://localhost:3000](http://localhost:3000) in your web browser.
+   Access the application at [http://localhost:3000](http://localhost:3000).
 
-## Tech Stack
+---
 
-- **ReactJS**: A JavaScript library for building user interfaces.
-- **Azure Cognitive Services**: Used for text-to-speech and other AI capabilities.
-- **Styled-components**: For styling React components.
-- **WebRTC**: For real-time communication capabilities.
+## 🛡️ **Tech Stack**
 
-## Configuration
+- **ReactJS**: A powerful library for building interactive UIs.
+- **Azure Cognitive Services**: Enables text-to-speech and other AI-driven functionalities.
+- **Styled-components**: Provides seamless styling for components.
+- **WebRTC**: Facilitates real-time communication capabilities.
 
-Make sure to configure the necessary API keys and settings in the `.env` file before running the application.
+---
 
-## Feedback and Issues
+## 🔧 **Configuration**
 
-If you encounter any issues or have feedback, please open an issue. We welcome your contributions and suggestions!
+Ensure that the necessary API keys and environment settings are properly configured in the `.env` file before running the application.
 
-## License
+---
 
-This project is licensed under the MIT License.
+## 💬 **Feedback and Issues**
 
-Happy coding!
+We’d love to hear from you! If you encounter any issues or have suggestions, please open an issue in the repository. Your contributions and feedback help us improve!
+
+---
+
+## 🎉 **Happy Coding!**
+
+Unleash the power of AI with Azure Avatar and create engaging, interactive experiences like never before. Let’s build something amazing together!
+
