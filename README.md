@@ -10,7 +10,7 @@ Click the link above to watch a demo of the Azure Avatar in action!
 
 ## Home Screen
 
-![Main Screenshot](./public/Avatar_SS.png)
+![Main Screenshot](./FrontEnd/public/Avatar_SS.png)
 
 *Add a screenshot of your application here to give users a visual overview of what to expect.*
 
