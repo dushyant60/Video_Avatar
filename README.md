@@ -16,7 +16,6 @@ Explore the Azure Avatar in action through our demo video! Witness how synthetic
 
 ![Main Screenshot](./FrontEnd/public/Avatar_SS.png)
 
-> _*Add a screenshot of your application here to give users a visual overview of what to expect.*_
 
 ---
 
