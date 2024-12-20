@@ -91,39 +91,39 @@ export const UserInfoForm = ({ onSave }) => {
     e.preventDefault();
     const dataToSend = { ...formData, location };
   
-    try {
-      // Attempt to send the data to the API
-      const response = await axios.post(
-        "https://7380-2405-201-4055-302b-f5b1-628-6792-28cd.ngrok-free.app/register-user",
-        dataToSend
-      );
-      setSubmitStatus("User registered successfully!");
-      console.log("Response:", response.data);
-    } catch (error) {
-      if (error.response) {
-        const { status, data } = error.response;
+    // try {
+    //   // Attempt to send the data to the API
+    //   const response = await axios.post(
+    //     "https://ddf5-49-36-183-140.ngrok-free.app/register-user",
+    //     dataToSend
+    //   );
+    //   setSubmitStatus("User registered successfully!");
+    //   console.log("Response:", response.data);
+    // } catch (error) {
+    //   if (error.response) {
+    //     const { status, data } = error.response;
   
-        if (
-          status === 400 &&
-          data.message &&
-          data.message.includes("User with this mobile number or email already exists")
-        ) {
-          // Duplicate entry detected, log and move forward with the avatar flow
-          console.warn("Duplicate entry detected, proceeding with the avatar flow.");
-          setSubmitStatus("Duplicate entry. Proceeding with existing data.");
-        } else {
-          // Handle other errors
-          console.error("Error submitting form:", error);
-          setSubmitStatus("Failed to register user. Please try again.");
-          return; // Exit if there's a real error
-        }
-      } else {
-        // Handle case where there's no response from the server
-        console.error("Error submitting form:", error);
-        setSubmitStatus("Failed to register user. Please try again.");
-        return;
-      }
-    }
+    //     if (
+    //       status === 400 &&
+    //       data.message &&
+    //       data.message.includes("User with this mobile number or email already exists")
+    //     ) {
+    //       // Duplicate entry detected, log and move forward with the avatar flow
+    //       console.warn("Duplicate entry detected, proceeding with the avatar flow.");
+    //       setSubmitStatus("Duplicate entry. Proceeding with existing data.");
+    //     } else {
+    //       // Handle other errors
+    //       console.error("Error submitting form:", error);
+    //       setSubmitStatus("Failed to register user. Please try again.");
+    //       return; // Exit if there's a real error
+    //     }
+    //   } else {
+    //     // Handle case where there's no response from the server
+    //     console.error("Error submitting form:", error);
+    //     setSubmitStatus("Failed to register user. Please try again.");
+    //     return;
+    //   }
+    // }
   
     // Proceed with the avatar flow regardless of whether the user is new or existing
     onSave(dataToSend);
