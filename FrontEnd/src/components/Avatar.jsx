@@ -56,12 +56,13 @@ export const Avatar = forwardRef(
   }, [isConnected, isLoading]);
 
   const handleSaveUserInfo = (data) => {
+    if (!userInfo) {
     setUserInfo(data);
     onSaveUserInfo(data);
     setShowForm(false);
     setShowOptions(true); // Show options after form submission
     onSessionStart();
-    console.log("User Info Saved:", data);
+    // console.log("User Info Saved:", data);
   
     // Extract first name from the full name (assuming 'data.name' contains the full name)
     const username = data.name ? data.name.split(' ')[0] : "User"; // Default to "User" if name is not provided
@@ -85,6 +86,7 @@ export const Avatar = forwardRef(
           avatarSynthesizer.close();
         });
     }
+  }
   };
 
   const {

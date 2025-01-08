@@ -17,6 +17,7 @@ export const UserInfoForm = ({ onSave }) => {
 
   const [locationError, setLocationError] = useState("");
   const [submitStatus, setSubmitStatus] = useState(""); // To display success/error messages
+  const [userId, setUserId] = useState(null); // State to store User ID
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,14 +74,20 @@ export const UserInfoForm = ({ onSave }) => {
         setLocationError("User denied the request for Geolocation.");
         break;
       case error.POSITION_UNAVAILABLE:
-        setLocationError("Location information is unavailable.");
+        // setLocationError("Location information is unavailable.");
         break;
       case error.TIMEOUT:
-        setLocationError("The request to get user location timed out.");
+        // setLocationError("The request to get user location timed out.");
         break;
       default:
         setLocationError("An unknown error occurred.");
     }
+        // Proceed with default location values
+    setLocation((prev) => ({
+      ...prev,
+      latitude: "",
+      longitude: "",
+    }));
   };
 
   useEffect(() => {
@@ -91,42 +98,48 @@ export const UserInfoForm = ({ onSave }) => {
     e.preventDefault();
     const dataToSend = { ...formData, location };
   
-    // try {
-    //   // Attempt to send the data to the API
-    //   const response = await axios.post(
-    //     "https://ddf5-49-36-183-140.ngrok-free.app/register-user",
-    //     dataToSend
-    //   );
-    //   setSubmitStatus("User registered successfully!");
-    //   console.log("Response:", response.data);
-    // } catch (error) {
-    //   if (error.response) {
-    //     const { status, data } = error.response;
-  
-    //     if (
-    //       status === 400 &&
-    //       data.message &&
-    //       data.message.includes("User with this mobile number or email already exists")
-    //     ) {
-    //       // Duplicate entry detected, log and move forward with the avatar flow
-    //       console.warn("Duplicate entry detected, proceeding with the avatar flow.");
-    //       setSubmitStatus("Duplicate entry. Proceeding with existing data.");
-    //     } else {
-    //       // Handle other errors
-    //       console.error("Error submitting form:", error);
-    //       setSubmitStatus("Failed to register user. Please try again.");
-    //       return; // Exit if there's a real error
-    //     }
-    //   } else {
-    //     // Handle case where there's no response from the server
-    //     console.error("Error submitting form:", error);
-    //     setSubmitStatus("Failed to register user. Please try again.");
-    //     return;
-    //   }
-    // }
-  
+    try { 
+      // Attempt to send the data to the API
+      const response = await axios.post(
+        "https://426b-2405-201-4055-303b-b80e-a49f-d1f5-1ba5.ngrok-free.app/register-user",
+        dataToSend
+      );
+
+      const userId = response.data.user.id;
+      setUserId(userId); // Store User ID
+      setSubmitStatus("User registered successfully!");
+      console.log("User ID:", userId);
+      // onSave({ ...dataToSend, userId });
+    }
+
+    catch (error) {
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (
+          status === 400 &&
+          data.message &&
+          data.message.includes("User with this mobile number or email already exists")
+        ) {
+          // Duplicate entry detected, log and move forward with the avatar flow
+          console.warn("Duplicate entry detected, proceeding with the avatar flow.");
+          setSubmitStatus("Duplicate entry. Proceeding with existing data.");
+        } else {
+          // Handle other errors
+          console.error("Error submitting form:", error);
+          setSubmitStatus("Failed to register user. Please try again.");
+          return; // Exit if there's a real error
+        }
+      } else {
+        // Handle case where there's no response from the server
+        console.error("Error submitting form:", error);
+        setSubmitStatus("Failed to register user. Please try again.");
+        return;
+      }
+    }
     // Proceed with the avatar flow regardless of whether the user is new or existing
-    onSave(dataToSend);
+    console.log("User ID:", userId);
+    onSave(dataToSend, userId);
   };
 
   return (
