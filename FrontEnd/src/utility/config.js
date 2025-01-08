@@ -7,4 +7,6 @@ export const avatarAppConfig = {
   avatarBackgroundColor: process.env.REACT_APP_AVATAR_BACKGROUND_COLOR,
   azureOpenAIEndpoint: process.env.REACT_APP_AZURE_OPENAI_ENDPOINT,
   azureOpenAIKey: process.env.REACT_APP_AZURE_OPENAI_KEY,
+  conversationApiUrl: process.env.REACT_APP_CONVERSATION_API_URL,
+  recommendationDbApiUrl: process.env.REACT_APP_RECOMMENDATION_DB_API_URL,
 };

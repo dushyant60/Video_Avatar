@@ -116,7 +116,7 @@ const Video_Res = () => {
             ]
         }];
         const openAiResponse = await fetch(
-          "https://cb01-2405-201-4055-3043-7c47-b24b-b216-1d00.ngrok-free.app/api/conversation",
+          avatarAppConfig.conversationApiUrl,
           {
             method: "POST",
             headers: {
@@ -152,12 +152,12 @@ const Video_Res = () => {
           };
         }
   
-        // Then send the recommendation to your endpoint
-        await axios.post("https://426b-2405-201-4055-303b-b80e-a49f-d1f5-1ba5.ngrok-free.app/send-recommendation", {
-          user_id: userId,
-          mobile: mobile,
-          recommendation: carRecommendation // Send the parsed car recommendation
-        });
+      // Use config for recommendation API
+      await axios.post(avatarAppConfig.recommendationDbApiUrl, {
+        user_id: userId,
+        mobile: mobile,
+        recommendation: carRecommendation
+      });
   
         console.log('Recommendation sent successfully:', carRecommendation);
   
@@ -306,7 +306,7 @@ console.log("User Info Saved:", userInfo);
 
     try {
       const response = await fetch(
-        "https://cb01-2405-201-4055-3043-7c47-b24b-b216-1d00.ngrok-free.app/api/conversation",
+        avatarAppConfig.conversationApiUrl,
         {
           method: "POST",
           headers: {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./UserInfoForm.css";
+import { avatarAppConfig } from "../utility/config";
 
 export const UserInfoForm = ({ onSave }) => {
   const [formData, setFormData] = useState({
@@ -71,7 +72,7 @@ export const UserInfoForm = ({ onSave }) => {
   const handleError = (error) => {
     switch (error.code) {
       case error.PERMISSION_DENIED:
-        setLocationError("User denied the request for Geolocation.");
+        // setLocationError("User denied the request for Geolocation.");
         break;
       case error.POSITION_UNAVAILABLE:
         // setLocationError("Location information is unavailable.");
@@ -80,7 +81,7 @@ export const UserInfoForm = ({ onSave }) => {
         // setLocationError("The request to get user location timed out.");
         break;
       default:
-        setLocationError("An unknown error occurred.");
+        // setLocationError("An unknown error occurred.");
     }
         // Proceed with default location values
     setLocation((prev) => ({
@@ -101,7 +102,7 @@ export const UserInfoForm = ({ onSave }) => {
     try { 
       // Attempt to send the data to the API
       const response = await axios.post(
-        "https://426b-2405-201-4055-303b-b80e-a49f-d1f5-1ba5.ngrok-free.app/register-user",
+        avatarAppConfig.recommendationDbApiUrl,
         dataToSend
       );
 
