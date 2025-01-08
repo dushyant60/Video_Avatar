@@ -99,48 +99,52 @@ export const UserInfoForm = ({ onSave }) => {
     e.preventDefault();
     const dataToSend = { ...formData, location };
   
-    try { 
-      // Attempt to send the data to the API
+    try {
       const response = await axios.post(
-        avatarAppConfig.recommendationDbApiUrl,
+        avatarAppConfig.registerUserApiUrl,
         dataToSend
       );
-
-      const userId = response.data.user.id;
-      setUserId(userId); // Store User ID
+  
+      const newUserId = response.data.user.id;
+      setUserId(newUserId);
       setSubmitStatus("User registered successfully!");
-      console.log("User ID:", userId);
-      // onSave({ ...dataToSend, userId });
-    }
-
-    catch (error) {
+      console.log("User ID:", newUserId);
+      
+      // Create complete data object with userId
+      const completeData = {
+        ...dataToSend,
+        userId: newUserId
+      };
+      
+      // Pass the complete data
+      onSave(completeData);
+  
+    } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
-
+  
         if (
           status === 400 &&
           data.message &&
           data.message.includes("User with this mobile number or email already exists")
         ) {
-          // Duplicate entry detected, log and move forward with the avatar flow
           console.warn("Duplicate entry detected, proceeding with the avatar flow.");
           setSubmitStatus("Duplicate entry. Proceeding with existing data.");
+          // For existing users, pass data without userId
+          onSave({
+            ...dataToSend,
+          });
         } else {
-          // Handle other errors
           console.error("Error submitting form:", error);
           setSubmitStatus("Failed to register user. Please try again.");
-          return; // Exit if there's a real error
+          return;
         }
       } else {
-        // Handle case where there's no response from the server
         console.error("Error submitting form:", error);
         setSubmitStatus("Failed to register user. Please try again.");
         return;
       }
     }
-    // Proceed with the avatar flow regardless of whether the user is new or existing
-    console.log("User ID:", userId);
-    onSave(dataToSend, userId);
   };
 
   return (

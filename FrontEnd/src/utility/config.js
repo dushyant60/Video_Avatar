@@ -9,4 +9,5 @@ export const avatarAppConfig = {
   azureOpenAIKey: process.env.REACT_APP_AZURE_OPENAI_KEY,
   conversationApiUrl: process.env.REACT_APP_CONVERSATION_API_URL,
   recommendationDbApiUrl: process.env.REACT_APP_RECOMMENDATION_DB_API_URL,
+  registerUserApiUrl: process.env.REACT_APP_REGISTER_USER_API_URL,
 };

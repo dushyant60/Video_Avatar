@@ -18,7 +18,7 @@ import ScreenshotDrawer from "./ScreenshotDrawer";
 import MessageDrawer from "./MessageDrawer";
 
 const Video_Res = () => {
-  const [userId, setUserId] = useState(); // State to store User ID
+  const [userId, setUserId] = useState(null); // State to store User ID
   const [mobile, setMobile] = useState(); // State to store mobile number
   const [videoSrc, setVideoSrc] = useState(
     "https://isamblobstorage.blob.core.windows.net/isamfilecotainer/videos_nissan/2021 Nissan Magnite.mp4"
@@ -203,20 +203,19 @@ const Video_Res = () => {
     // };
 
   const handleSaveUserInfo = (userInfo) => {
- // Check if userId is already set to prevent duplicate calls
- if (userId) {
-  console.warn("User ID is already set, skipping duplicate save.");
-  return;
-}
+// First log the incoming data to debug
+console.log("Received userInfo:", userInfo);
 
 // Update conversationId with user name and mobile
 const updatedConversationId = `${conversationId}+${userInfo.name}+${userInfo.mobile}`;
 setConversationId(updatedConversationId);
 console.log("Updated Conversation ID:", updatedConversationId);
 
-// Log the userId before setting it
-console.log("Setting User ID:", userInfo.userId);
-setUserId(userInfo.userId); // Update state with userId
+// Only set userId if it exists in userInfo and current userId is not set
+if (userInfo.userId && !userId) {
+  console.log("Setting User ID:", userInfo.userId);
+  setUserId(userInfo.userId);
+}
 setMobile(userInfo.mobile); // Update state with mobile number
 console.log("Mobile Number Saved:", userInfo.mobile);
 
