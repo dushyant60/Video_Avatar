@@ -68,7 +68,7 @@ export const Avatar = forwardRef(
     const username = data.name ? data.name.split(' ')[0] : "User"; // Default to "User" if name is not provided
   
     if (avatarSynthesizer) {
-      const message = `Hello ${username}!, You can ask for a consolidated demo of the Nissan Magnite, or you can ask me anything after continuing.`;
+      const message = `Hello ${username}! I'm here to help you explore the Nissan Magnite. You can choose to view a **comprehensive demo**, or feel free to **ask me any questions** you might have. Please select 'Demo' or 'Continue' to proceed.`;
       avatarSynthesizer
         .speakTextAsync(message)
         .then((result) => {
@@ -97,8 +97,8 @@ export const Avatar = forwardRef(
     azureSpeechServiceRegion,
   } = avatarAppConfig;
 
-  const introductionMessage = "Hello! I am your virtual assistant. Please fill in your details. To Continue for Demo!";
-  const continuationMessage = "You can ask me anything regarding Nissan Magnite.";
+  const introductionMessage = "Hello! I am your virtual assistant! Please fill in your details. To Continue for Demo!";
+  const continuationMessage = "You can ask me anything regarding the Nissan Magnite.";
 
   useEffect(() => {
     const timer = setTimeout(() => setShowTooltip(false), 5000);
@@ -258,7 +258,7 @@ export const Avatar = forwardRef(
               const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
               if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
                 console.error(cancellationDetails.errorDetails);
-              }
+              } 
             }
           }
         })
