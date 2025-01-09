@@ -204,10 +204,11 @@ const Video_Res = () => {
 
   const handleSaveUserInfo = (userInfo) => {
 // First log the incoming data to debug
+const firstName = userInfo.name.split(' ')[0];
 console.log("Received userInfo:", userInfo);
 
 // Update conversationId with user name and mobile
-const updatedConversationId = `${conversationId}+${userInfo.name}+${userInfo.mobile}`;
+const updatedConversationId = `${conversationId}+${firstName}+${userInfo.mobile}`;
 setConversationId(updatedConversationId);
 console.log("Updated Conversation ID:", updatedConversationId);
 
