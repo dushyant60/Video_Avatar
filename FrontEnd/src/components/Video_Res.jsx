@@ -6,6 +6,7 @@ import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
 import { avatarAppConfig } from "../utility/config";
 import { ConversationLogger } from "../utility/conversationLogger";
 import { InsightsGenerator } from "../utility/insightsGenerator";
+import ReactMarkdown from 'react-markdown';
 import { AppContainer, DemoVideoContainer, HiddenWrapper, VideoContainer, StyledVideo, ChatContainer, ChatInput, SendButton, StopSpeakingButton, AvatarContainer, MessageList, Message, StopButton, CloseButton } from "./styledComponents";
 import {
   FaMicrophone,
@@ -44,6 +45,7 @@ const Video_Res = () => {
   const isFirstMessage = useRef(true); // To track first message
   const [isAvatarSessionStarted, setAvatarSessionStarted] = useState(false);
   const avatarRef = useRef(); //Stop Spaking Avatar
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   //Stop Spaking Avatar
   const handleStopSpeaking = () => {
@@ -259,18 +261,21 @@ console.log("User Info Saved:", userInfo);
       setStatus("No video playing. Please upload a video.");
       return;
     }
-
+ 
     if (!prompt.trim()) {
       setStatus("User prompt is empty. Please enter a question.");
       return;
     }
-
+    setUserPrompt("");
+ 
+    setIsInputDisabled(true); // Disable the input box
+   
         // Initialize logger on first message
         if (isFirstMessage.current) {
           const logger = new ConversationLogger(conversationId);
           setConversationLogger(logger);
           isFirstMessage.current = false;
-          
+         
           // Log session start
           logger.addEntry({
             type: 'session_start',
@@ -281,7 +286,7 @@ console.log("User Info Saved:", userInfo);
             }
           });
         }
-
+ 
     const capturedFrame = captureFrame();
     // setStatus('Sending data...');
     const newUserMessage = {
@@ -290,10 +295,10 @@ console.log("User Info Saved:", userInfo);
     };
     const updatedMessages = [...messages, newUserMessage];
     setMessages(updatedMessages);
-
+ 
     const updatedChatHistory = [...messages, newUserMessage];
     setScreenshots([...screenshots, capturedFrame]);
-
+ 
       // Log user message
       conversationLogger?.addEntry({
         type: 'user_message',
@@ -303,8 +308,9 @@ console.log("User Info Saved:", userInfo);
           frameCapture: !!capturedFrame
         }
       });
-
+ 
     try {
+     
       const response = await fetch(
         avatarAppConfig.conversationApiUrl,
         {
@@ -320,11 +326,11 @@ console.log("User Info Saved:", userInfo);
           }),
         }
       );
-
+ 
       const data = await response.json();
       const cleanMessage = parseResponse(data.message);
       setStatus(cleanMessage);
-
+ 
            // Log API response
            conversationLogger?.addEntry({
             type: 'api_response',
@@ -334,7 +340,7 @@ console.log("User Info Saved:", userInfo);
               responseTime: new Date().toISOString()
             }
           });
-
+ 
       const newAssistantMessage = {
         role: "assistant",
         content: [{ type: "text", text: cleanMessage }],
@@ -342,7 +348,7 @@ console.log("User Info Saved:", userInfo);
       const finalMessages = [...updatedMessages, newAssistantMessage];
       setMessages(finalMessages);
     } catch (error) {
-
+ 
         // Log error
         conversationLogger?.addEntry({
           type: 'error',
@@ -352,11 +358,12 @@ console.log("User Info Saved:", userInfo);
             errorTime: new Date().toISOString()
           }
         });
-  
+ 
       setStatus("Error sending data.");
       console.error("Error:", error);
     }
-    setUserPrompt("");
+    setIsInputDisabled(false); // Re-enable the input box
+    // setUserPrompt("");
   };
 
   const handleKeyPress = (event) => {
@@ -529,20 +536,32 @@ console.log("User Info Saved:", userInfo);
           />
         </HiddenWrapper>
         <AvatarContainer>
-          <MessageList>
-            {messages.map((msg, index) => (
-              <Message key={index} isQuestion={msg.role === "user"}>
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      msg.role === "user"
-                        ? ` ${msg.content[0].text}`
-                        : ` ${msg.content[0].text}`,
-                  }}
-                />
-              </Message>
-            ))}
-          </MessageList>
+        <MessageList>
+  {messages.map((msg, index) => (
+    <Message key={index} isQuestion={msg.role === "user"}>
+      <span>
+      <ReactMarkdown
+  components={{
+    a: ({ href, children }) => (
+      <a
+        href={href}
+        style={{ color: "rgb(43 49 59)" }} // Inline styling
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {children}
+      </a>
+    ),
+  }}
+>
+  {msg.content[0].text}
+</ReactMarkdown>
+ 
+        {/* <ReactMarkdown>{msg.content[0].text}</ReactMarkdown> */}
+      </span>
+    </Message>
+  ))}
+</MessageList>
           <Avatar
             ref={avatarRef} 
             externalMessage={status}
@@ -558,11 +577,12 @@ console.log("User Info Saved:", userInfo);
 
       <HiddenWrapper show={showHiddenContent}>
         <ChatContainer>
-          <ChatInput
+        <ChatInput
             value={userPrompt}
             onChange={(e) => setUserPrompt(e.target.value)}
             placeholder="Enter your question here..."
             onKeyPress={handleKeyPress}
+            disabled={isInputDisabled} // Disable input based on state
           />
           <SendButton onClick={() => handleSend(userPrompt)}>
             {" "}

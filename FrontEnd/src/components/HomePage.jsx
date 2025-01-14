@@ -55,11 +55,9 @@ const HomePage = () => {
               />
               <h3>Book Test Drive</h3>
               <p>
-                Get real-time detection and information about car parts during
-                a live video session. Our experts will guide you through the
-                parts and answer your queries.
+              Schedule a personalized test drive experience with ease. Connect with our team for guidance and ensure a smooth booking process. Click below to get started.
               </p>
-              <a href="pages/solutions.html#live-video" className="card-btn">
+              <a href="https://cartestdrive-c9aqduaxd7hddkap.centralindia-01.azurewebsites.net/ride" className="card-btn" target="_blank" rel="noopener noreferrer">
                 Learn More
               </a>
             </div>
@@ -77,11 +75,9 @@ const HomePage = () => {
               />
               <h3>Book Car</h3>
               <p>
-                Use our interactive 3D model to explore and identify car parts.
-                Simply click on a part to get detailed information and answers
-                to common questions.
+              Easily reserve your desired car online. Follow a simple process to book your car at your convenience. Click below to proceed.
               </p>
-              <a href="pages/solutions.html#3d-model" className="card-btn">
+              <a href="https://cartestdrive-c9aqduaxd7hddkap.centralindia-01.azurewebsites.net/bookcar" className="card-btn" target="_blank" rel="noopener noreferrer">
                 Learn More
               </a>
             </div>
@@ -99,11 +95,9 @@ const HomePage = () => {
               />
               <h3>Dealers Page</h3>
               <p>
-                Upload or take a picture of your car, and our system will
-                identify and provide details about the visible parts, helping
-                you learn more about each component.
+              Dealers can now manage everything in one place, streamlining processes for better efficiency. Click below to learn more.
               </p>
-              <a href="pages/solutions.html#image-detection" className="card-btn">
+              <a className="card-btn" style={{ backgroundColor: "#ccc", cursor: "not-allowed" }}>
                 Learn More
               </a>
             </div>

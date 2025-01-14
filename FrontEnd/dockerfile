@@ -1,9 +1,6 @@
 FROM node:alpine
-RUN mkdir -p /FRONTEND
 WORKDIR /FRONTEND
-COPY  package.json ./
-COPY  package-lock.json ./
-COPY ./ ./
+COPY . /FRONTEND
 RUN npm i -f
 EXPOSE 3000
 CMD ["npm","start"]

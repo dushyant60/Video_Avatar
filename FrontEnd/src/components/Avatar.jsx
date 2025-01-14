@@ -97,8 +97,8 @@ export const Avatar = forwardRef(
     azureSpeechServiceRegion,
   } = avatarAppConfig;
 
-  const introductionMessage = "Hello! I am your virtual assistant! Please fill in your details. To Continue for Demo!";
-  const continuationMessage = "You can ask me anything regarding the Nissan Magnite.";
+  const introductionMessage = "Hello! I am your virtual assistant! Please fill in your details. To Continue!";
+  const continuationMessage = "Glad to have you here! Ask me anything about the Nissan Magnite or other Nissan vehicles.";
 
   useEffect(() => {
     const timer = setTimeout(() => setShowTooltip(false), 5000);
@@ -231,14 +231,32 @@ export const Avatar = forwardRef(
   };
 
   const cleanText = (text) => {
-    return text.replace(/[*_~`]/g, "").replace(/\[doc\d+\]/g, "");
+    // Remove special Markdown characters
+    let cleanedText = text.replace(/[*_~`]/g, "");
+ 
+    // Remove any [doc123] placeholders
+    cleanedText = cleanedText.replace(/\[doc\d+\]/g, "");
+ 
+    // Remove entire Markdown links and associated text
+    // Example: `[Test Drive Link](https://picsum.photos/200/300)` -> completely removed
+    cleanedText = cleanedText.replace(/\[([^\]]+)\]\([^)]+\)/g, "");
+ 
+    // Remove any plain text links and their descriptions
+    // Example: "Test Drive Link: https://picsum.photos/200/300" -> completely removed
+    cleanedText = cleanedText.replace(/(?:\b\S+\s+)?https?:\/\/[^\s]+/g, "");
+ 
+    return cleanedText.trim(); // Ensure no trailing spaces
   };
 
   const handleSpeechRecognitionResult = async (userQuery) => {
+    console.log('userquery', userQuery);
+   
     const response = userQuery;
     const cleanedResponse = cleanText(response);
+    console.log('userquery', cleanedResponse);
+ 
     setResponseText(cleanedResponse);
-
+ 
     if (avatarSynthesizer) {
       const audioPlayer = myAvatarAudioEleRef.current;
       audioPlayer.muted = false;
@@ -248,24 +266,42 @@ export const Avatar = forwardRef(
           console.log("Audio playback failed: ", error);
         });
       }
-      avatarSynthesizer
-        .speakTextAsync(cleanedResponse)
-        .then((result) => {
-          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-            console.log("Speech and avatar synthesized to video stream.");
-          } else {
-            if (result.reason === SpeechSDK.ResultReason.Canceled) {
+ 
+      // Define the URL of the lexicon file
+      const lexiconFileUrl = 'https://nissandocsprocess.blob.core.windows.net/test/english.xml';
+ 
+      // Construct SSML with the lexicon reference
+      const ssml = `
+        <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">
+          <voice name="en-US-AlloyMultilingualNeural">
+          <lexicon uri="${lexiconFileUrl}" />
+ 
+            ${cleanedResponse}
+          </voice>
+        </speak>
+      `;
+ 
+      try {
+        // Start the speech synthesis with the SSML input
+        avatarSynthesizer.speakSsmlAsync(ssml,
+          (result) => {
+            if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+              console.log("Speech and avatar synthesized to video stream.");
+            } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
               const cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
               if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
                 console.error(cancellationDetails.errorDetails);
-              } 
+              }
             }
+          },
+          (error) => {
+            console.error("Error synthesizing speech:", error);
+            avatarSynthesizer.close();
           }
-        })
-        .catch((error) => {
-          console.error("Error synthesizing speech:", error);
-          avatarSynthesizer.close();
-        });
+        );
+      } catch (error) {
+        console.error("Error during speech synthesis:", error);
+      }
     }
   };
 
